@@ -79,10 +79,6 @@ export default function EndlessDriftGame() {
 
   // Refs
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
-  const obstacleSpawnRef = useRef<NodeJS.Timeout | null>(null);
-  const pickupSpawnRef = useRef<NodeJS.Timeout | null>(null);
-  const coinSpawnRef = useRef<NodeJS.Timeout | null>(null);
-  const difficultyRef = useRef<NodeJS.Timeout | null>(null);
   const lastObstacleSpawnTime = useRef(0);
   const lastPickupSpawnTime = useRef(0);
   const lastCoinSpawnTime = useRef(0);
@@ -92,6 +88,8 @@ export default function EndlessDriftGame() {
   // Load inventory on mount
   useEffect(() => {
     loadInventory().then(setInventory);
+    console.log('Game initialized - automatic sign-in would happen here');
+    console.log('Note: Game Center (iOS) and Google Play Games (Android) require native modules not available in current setup');
   }, []);
 
   // Get selected skins
@@ -120,6 +118,9 @@ export default function EndlessDriftGame() {
     setPickups([]);
     setScrollOffset(0);
     crashPosition.current = null;
+    lastObstacleSpawnTime.current = 0;
+    lastPickupSpawnTime.current = 0;
+    lastCoinSpawnTime.current = 0;
   }, []);
 
   // Start game
@@ -181,14 +182,20 @@ export default function EndlessDriftGame() {
 
   // Go to main menu
   const goToMainMenu = useCallback(() => {
+    // Calculate coins earned from distance
+    const distanceCoins = Math.floor(gameState.distance / 100) * GAME_CONFIG.COINS_PER_100M;
+    const totalCoins = gameState.coins + distanceCoins;
+    
+    console.log(`Distance: ${gameState.distance}m, Coins from pickups: ${gameState.coins}, Coins from distance: ${distanceCoins}, Total: ${totalCoins}`);
+    
     // Save coins to inventory
     setInventory(prev => {
-      const updated = { ...prev, coins: prev.coins + gameState.coins };
+      const updated = { ...prev, coins: prev.coins + totalCoins };
       saveInventory(updated);
       return updated;
     });
     setGameState(prev => ({ ...prev, isPlaying: false, isGameOver: false }));
-  }, [gameState.coins]);
+  }, [gameState.coins, gameState.distance]);
 
   // Store handlers
   const handleOpenStore = useCallback(() => {
@@ -329,6 +336,7 @@ export default function EndlessDriftGame() {
 
     setObstacles(prev => [...prev, newObstacle]);
     lastObstacleSpawnTime.current = now;
+    console.log(`Spawned ${type} obstacle in lane ${lane}`);
   }, []);
 
   // Spawn pickup
@@ -356,6 +364,7 @@ export default function EndlessDriftGame() {
 
     setPickups(prev => [...prev, newPickup]);
     lastPickupSpawnTime.current = now;
+    console.log(`Spawned ${type} pickup in lane ${lane}`);
   }, []);
 
   // Spawn coin
@@ -381,16 +390,16 @@ export default function EndlessDriftGame() {
 
     setPickups(prev => [...prev, newCoin]);
     lastCoinSpawnTime.current = now;
+    console.log(`Spawned coin in lane ${lane}`);
   }, []);
 
   // Game loop
   useEffect(() => {
     if (!gameState.isPlaying || gameState.isGameOver) {
-      if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-      if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
-      if (pickupSpawnRef.current) clearInterval(pickupSpawnRef.current);
-      if (coinSpawnRef.current) clearInterval(coinSpawnRef.current);
-      if (difficultyRef.current) clearInterval(difficultyRef.current);
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
+      }
       return;
     }
 
@@ -428,14 +437,18 @@ export default function EndlessDriftGame() {
             pickups: [...pickups],
             distance: newDistance,
           };
-          return { ...prev, isGameOver: true, fuel: 0, crashCount: prev.crashCount + 1 };
+          return { ...prev, isGameOver: true, fuel: 0, distance: newDistance, crashCount: prev.crashCount + 1 };
         }
+
+        // Gradually increase speed
+        const newSpeed = Math.min(GAME_CONFIG.MAX_SPEED, prev.speed + GAME_CONFIG.SPEED_INCREMENT);
 
         return {
           ...prev,
           distance: newDistance,
           score: newScore,
           fuel: newFuel,
+          speed: newSpeed,
           speedBoostTimer: newSpeedBoostTimer,
           speedBoostActive: newSpeedBoostActive,
         };
@@ -473,37 +486,22 @@ export default function EndlessDriftGame() {
 
         return updated;
       });
+
+      // Spawn obstacles
+      spawnObstacle();
+
+      // Spawn pickups
+      spawnPickup();
+
+      // Spawn coins
+      spawnCoin();
     }, GAME_CONFIG.FRAME_INTERVAL);
 
-    // Spawn obstacles
-    obstacleSpawnRef.current = setInterval(() => {
-      spawnObstacle();
-    }, GAME_CONFIG.OBSTACLE_SPAWN_INTERVAL);
-
-    // Spawn pickups
-    pickupSpawnRef.current = setInterval(() => {
-      spawnPickup();
-    }, GAME_CONFIG.PICKUP_SPAWN_INTERVAL);
-
-    // Spawn coins
-    coinSpawnRef.current = setInterval(() => {
-      spawnCoin();
-    }, GAME_CONFIG.COIN_SPAWN_INTERVAL);
-
-    // Increase difficulty
-    difficultyRef.current = setInterval(() => {
-      setGameState(prev => ({
-        ...prev,
-        speed: Math.min(GAME_CONFIG.MAX_SPEED, prev.speed + GAME_CONFIG.SPEED_INCREMENT * 100),
-      }));
-    }, GAME_CONFIG.DIFFICULTY_INCREASE_INTERVAL);
-
     return () => {
-      if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-      if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
-      if (pickupSpawnRef.current) clearInterval(pickupSpawnRef.current);
-      if (coinSpawnRef.current) clearInterval(coinSpawnRef.current);
-      if (difficultyRef.current) clearInterval(difficultyRef.current);
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+        gameLoopRef.current = null;
+      }
     };
   }, [gameState.isPlaying, gameState.isGameOver, gameState.speed, spawnObstacle, spawnPickup, spawnCoin, playerLane, obstacles, pickups]);
 
@@ -578,16 +576,14 @@ export default function EndlessDriftGame() {
     }
   }, [gameState.isPlaying, gameState.isGameOver, gameState.hasShield, gameState.distance, playerX, playerLane, obstacles, pickups]);
 
-  // Save score to leaderboard
+  // Save score to leaderboard and calculate distance coins
   useEffect(() => {
     if (gameState.isGameOver && gameState.score > 0) {
-      // Save coins to inventory
-      setInventory(prev => {
-        const updated = { ...prev, coins: prev.coins + gameState.coins };
-        saveInventory(updated);
-        return updated;
-      });
-      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance, 'Coins:', gameState.coins);
+      // Calculate coins earned from distance
+      const distanceCoins = Math.floor(gameState.distance / 100) * GAME_CONFIG.COINS_PER_100M;
+      const totalCoins = gameState.coins + distanceCoins;
+      
+      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance, 'Coins from pickups:', gameState.coins, 'Coins from distance:', distanceCoins, 'Total coins:', totalCoins);
     }
   }, [gameState.isGameOver, gameState.score, gameState.distance, gameState.coins]);
 
@@ -666,7 +662,6 @@ export default function EndlessDriftGame() {
         speedBoostActive={gameState.speedBoostActive}
         speedBoostTimer={gameState.speedBoostTimer}
         coins={gameState.coins}
-        onExitToHome={goToMainMenu}
       />
 
       {/* Game over screen */}
@@ -674,7 +669,7 @@ export default function EndlessDriftGame() {
         <GameOverScreen
           score={gameState.score}
           distance={gameState.distance}
-          coins={gameState.coins}
+          coins={gameState.coins + Math.floor(gameState.distance / 100) * GAME_CONFIG.COINS_PER_100M}
           crashCount={gameState.crashCount}
           onRestart={restartGame}
           onWatchAd={watchAdToContinue}

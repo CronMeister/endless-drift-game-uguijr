@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { colors } from '@/styles/commonStyles';
 import { formatDistance, formatScore } from '@/utils/gameUtils';
 import { LeaderboardEntry } from '@/types/gameTypes';
+import { GAME_CONFIG } from '@/constants/gameConstants';
 
 interface GameOverScreenProps {
   score: number;
@@ -54,7 +55,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
             <Text style={styles.statValue}>{formatDistance(distance)}</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>COINS</Text>
+            <Text style={styles.statLabel}>COINS EARNED</Text>
             <Text style={[styles.statValue, { color: colors.coin }]}>💰 {coins}</Text>
           </View>
         </View>

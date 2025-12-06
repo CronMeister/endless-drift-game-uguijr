@@ -17,27 +17,27 @@ export const GAME_CONFIG = {
   NUM_LANES: 3,
   LANE_WIDTH: Math.min(SCREEN_WIDTH, 400) / 3,
   
-  // Player car
+  // Player car - positioned 1/4 from bottom
   CAR_WIDTH: 50,
   CAR_HEIGHT: 80,
-  CAR_START_Y: SCREEN_HEIGHT - 200,
+  CAR_START_Y: SCREEN_HEIGHT * 0.75 - 40, // 1/4 from bottom (75% down the screen)
   
   // Obstacles
   OBSTACLE_WIDTH: 50,
   OBSTACLE_HEIGHT: 80,
-  OBSTACLE_SPAWN_INTERVAL: 1200, // ms - reduced for more obstacles
+  OBSTACLE_SPAWN_INTERVAL: 800, // ms - spawn more frequently
   MIN_OBSTACLE_DISTANCE: 200,
   
   // Pickups
   PICKUP_WIDTH: 40,
   PICKUP_HEIGHT: 40,
-  PICKUP_SPAWN_INTERVAL: 2000, // ms
-  COIN_SPAWN_INTERVAL: 800, // ms - coins spawn more frequently
+  PICKUP_SPAWN_INTERVAL: 1500, // ms
+  COIN_SPAWN_INTERVAL: 600, // ms - coins spawn more frequently
   
   // Game mechanics
-  INITIAL_SPEED: 4,
+  INITIAL_SPEED: 5,
   MAX_SPEED: 15,
-  SPEED_INCREMENT: 0.001, // Increased for faster progression
+  SPEED_INCREMENT: 0.001,
   INITIAL_FUEL: 100,
   FUEL_DRAIN_RATE: 0.06,
   FUEL_PICKUP_AMOUNT: 30,
@@ -51,9 +51,10 @@ export const GAME_CONFIG = {
   COIN_SCORE: 10,
   CLOSE_CALL_SCORE: 100,
   CLOSE_CALL_DISTANCE: 100,
+  COINS_PER_100M: 5, // Earn 5 coins per 100 meters traveled
   
   // Difficulty
-  DIFFICULTY_INCREASE_INTERVAL: 8000, // ms - faster difficulty increase
+  DIFFICULTY_INCREASE_INTERVAL: 8000, // ms
   OBSTACLE_FREQUENCY_INCREASE: 0.9, // multiplier
   
   // Animation
