@@ -6,9 +6,15 @@ import { GAME_CONFIG } from '@/constants/gameConstants';
 
 interface RoadProps {
   scrollOffset: number;
+  roadColor?: string;
+  roadLineColor?: string;
 }
 
-export const Road: React.FC<RoadProps> = ({ scrollOffset }) => {
+export const Road: React.FC<RoadProps> = ({ 
+  scrollOffset, 
+  roadColor = colors.road,
+  roadLineColor = colors.roadLine 
+}) => {
   const lineHeight = 40;
   const lineGap = 20;
   const totalLineHeight = lineHeight + lineGap;
@@ -26,6 +32,7 @@ export const Road: React.FC<RoadProps> = ({ scrollOffset }) => {
             {
               top: yPos,
               height: lineHeight,
+              backgroundColor: roadLineColor,
             },
           ]}
         />
@@ -35,7 +42,7 @@ export const Road: React.FC<RoadProps> = ({ scrollOffset }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: roadColor }]}>
       {/* Lane dividers */}
       <View style={[styles.divider, { left: GAME_CONFIG.LANE_WIDTH }]}>
         {renderLines()}
@@ -52,7 +59,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: GAME_CONFIG.GAME_WIDTH,
     height: GAME_CONFIG.GAME_HEIGHT,
-    backgroundColor: colors.road,
   },
   divider: {
     position: 'absolute',
@@ -62,6 +68,5 @@ const styles = StyleSheet.create({
   line: {
     position: 'absolute',
     width: 4,
-    backgroundColor: colors.roadLine,
   },
 });

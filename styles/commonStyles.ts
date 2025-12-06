@@ -20,6 +20,7 @@ export const colors = {
   fuel: '#4CAF50',
   speedBoost: '#FFD54F',
   shield: '#00BCD4',
+  coin: '#FFD700',
 };
 
 export const buttonStyles = StyleSheet.create({

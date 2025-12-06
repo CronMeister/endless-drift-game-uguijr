@@ -10,6 +10,7 @@ interface HUDProps {
   fuel: number;
   speedBoostActive: boolean;
   speedBoostTimer: number;
+  coins: number;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -18,6 +19,7 @@ export const HUD: React.FC<HUDProps> = ({
   fuel,
   speedBoostActive,
   speedBoostTimer,
+  coins,
 }) => {
   return (
     <View style={styles.container}>
@@ -26,6 +28,10 @@ export const HUD: React.FC<HUDProps> = ({
         <View style={styles.scoreContainer}>
           <Text style={styles.label}>SCORE</Text>
           <Text style={styles.score}>{formatScore(score)}</Text>
+        </View>
+        <View style={styles.coinsContainer}>
+          <Text style={styles.coinIcon}>💰</Text>
+          <Text style={styles.coins}>{coins}</Text>
         </View>
         <View style={styles.distanceContainer}>
           <Text style={styles.label}>DISTANCE</Text>
@@ -54,7 +60,7 @@ export const HUD: React.FC<HUDProps> = ({
       {speedBoostActive && (
         <View style={styles.speedBoostContainer}>
           <Text style={styles.speedBoostText}>
-            SPEED BOOST! {Math.ceil(speedBoostTimer / 1000)}s
+            ⚡ SPEED BOOST! {Math.ceil(speedBoostTimer / 1000)}s
           </Text>
         </View>
       )}
@@ -74,10 +80,30 @@ const styles = StyleSheet.create({
   topHUD: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 15,
   },
   scoreContainer: {
     alignItems: 'flex-start',
+  },
+  coinsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.9)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+    elevation: 3,
+  },
+  coinIcon: {
+    fontSize: 20,
+    marginRight: 4,
+  },
+  coins: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
   },
   distanceContainer: {
     alignItems: 'flex-end',

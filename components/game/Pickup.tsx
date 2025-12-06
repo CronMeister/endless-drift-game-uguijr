@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { Pickup as PickupType } from '@/types/gameTypes';
 
@@ -17,6 +17,8 @@ export const Pickup: React.FC<PickupProps> = ({ pickup }) => {
         return colors.speedBoost;
       case 'shield':
         return colors.shield;
+      case 'coin':
+        return colors.coin;
       default:
         return colors.primary;
     }
@@ -40,6 +42,12 @@ export const Pickup: React.FC<PickupProps> = ({ pickup }) => {
         return (
           <View style={[styles.shield, { borderColor: getPickupColor() }]}>
             <View style={[styles.shieldInner, { backgroundColor: getPickupColor() }]} />
+          </View>
+        );
+      case 'coin':
+        return (
+          <View style={[styles.coin, { backgroundColor: getPickupColor() }]}>
+            <Text style={styles.coinText}>$</Text>
           </View>
         );
       default:
@@ -111,5 +119,21 @@ const styles = StyleSheet.create({
     height: '60%',
     borderRadius: 15,
     opacity: 0.5,
+  },
+  coin: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#FFA000',
+    boxShadow: '0px 0px 8px rgba(255, 215, 0, 0.6)',
+    elevation: 4,
+  },
+  coinText: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFA000',
   },
 });

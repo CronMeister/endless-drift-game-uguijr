@@ -17,7 +17,7 @@ export interface Obstacle extends GameObject {
 }
 
 export interface Pickup extends GameObject {
-  type: 'fuel' | 'speedBoost' | 'shield';
+  type: 'fuel' | 'speedBoost' | 'shield' | 'coin';
 }
 
 export interface GameState {
@@ -31,6 +31,8 @@ export interface GameState {
   hasShield: boolean;
   speedBoostActive: boolean;
   speedBoostTimer: number;
+  coins: number;
+  crashCount: number;
 }
 
 export interface LeaderboardEntry {
@@ -39,4 +41,38 @@ export interface LeaderboardEntry {
   score: number;
   distance: number;
   date: string;
+}
+
+export interface CarSkin {
+  id: string;
+  name: string;
+  color: string;
+  price: number;
+  unlocked: boolean;
+}
+
+export interface WorldSkin {
+  id: string;
+  name: string;
+  roadColor: string;
+  roadLineColor: string;
+  backgroundColor: string;
+  price: number;
+  unlocked: boolean;
+}
+
+export interface CoinPackage {
+  id: string;
+  name: string;
+  coins: number;
+  price: number;
+  priceRands: string;
+}
+
+export interface PlayerInventory {
+  coins: number;
+  selectedCarSkin: string;
+  selectedWorldSkin: string;
+  unlockedCarSkins: string[];
+  unlockedWorldSkins: string[];
 }

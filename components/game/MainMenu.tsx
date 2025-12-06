@@ -7,33 +7,48 @@ import { formatScore } from '@/utils/gameUtils';
 
 interface MainMenuProps {
   onStartGame: () => void;
+  onOpenStore: () => void;
   leaderboard: LeaderboardEntry[];
+  coins: number;
 }
 
-export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, leaderboard }) => {
+export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onOpenStore, leaderboard, coins }) => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>ENDLESS DRIFT</Text>
         <Text style={styles.subtitle}>Race as far as you can!</Text>
 
+        {/* Coins display */}
+        <View style={styles.coinsDisplay}>
+          <Text style={styles.coinIcon}>💰</Text>
+          <Text style={styles.coinsText}>{coins} Coins</Text>
+        </View>
+
         <View style={styles.instructionsContainer}>
           <Text style={styles.instructionsTitle}>HOW TO PLAY</Text>
-          <Text style={styles.instructionText}>• Swipe left/right to change lanes</Text>
-          <Text style={styles.instructionText}>• Avoid obstacles and collect pickups</Text>
-          <Text style={styles.instructionText}>• Don&apos;t run out of fuel!</Text>
-          <Text style={styles.instructionText}>• Speed increases over time</Text>
+          <Text style={styles.instructionText}>- Swipe left/right to change lanes</Text>
+          <Text style={styles.instructionText}>- Avoid obstacles and collect pickups</Text>
+          <Text style={styles.instructionText}>- Collect coins to unlock new cars & worlds</Text>
+          <Text style={styles.instructionText}>- Don&apos;t run out of fuel!</Text>
+          <Text style={styles.instructionText}>- Speed increases over time</Text>
         </View>
 
         <View style={styles.pickupsContainer}>
           <Text style={styles.pickupsTitle}>PICKUPS</Text>
+          <View style={styles.pickupItem}>
+            <View style={[styles.pickupIcon, { backgroundColor: colors.coin }]}>
+              <Text style={styles.pickupEmoji}>💰</Text>
+            </View>
+            <Text style={styles.pickupText}>Coin - Collect to buy items</Text>
+          </View>
           <View style={styles.pickupItem}>
             <View style={[styles.pickupIcon, { backgroundColor: colors.fuel }]} />
             <Text style={styles.pickupText}>Fuel - Restores energy</Text>
           </View>
           <View style={styles.pickupItem}>
             <View style={[styles.pickupIcon, { backgroundColor: colors.speedBoost }]} />
-            <Text style={styles.pickupText}>Speed Boost - Temporary speed increase</Text>
+            <Text style={styles.pickupText}>Speed Boost - Temporary speed</Text>
           </View>
           <View style={styles.pickupItem}>
             <View style={[styles.pickupIcon, { backgroundColor: colors.shield }]} />
@@ -56,6 +71,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, leaderboard }) 
             )}
           </ScrollView>
         </View>
+
+        <TouchableOpacity style={styles.storeButton} onPress={onOpenStore}>
+          <Text style={styles.storeButtonText}>🛒 STORE</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.startButton} onPress={onStartGame}>
           <Text style={styles.startButtonText}>START GAME</Text>
@@ -88,15 +107,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  coinsDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.coin,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+    elevation: 3,
+  },
+  coinIcon: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  coinsText: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
   },
   instructionsContainer: {
     width: '100%',
     backgroundColor: colors.card,
     borderRadius: 15,
     padding: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
@@ -117,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 15,
     padding: 15,
-    marginBottom: 20,
+    marginBottom: 15,
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
@@ -138,6 +177,11 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickupEmoji: {
+    fontSize: 16,
   },
   pickupText: {
     fontSize: 14,
@@ -149,8 +193,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 15,
     padding: 15,
-    marginBottom: 20,
-    maxHeight: 200,
+    marginBottom: 15,
+    maxHeight: 180,
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
@@ -162,7 +206,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   leaderboardScroll: {
-    maxHeight: 120,
+    maxHeight: 100,
   },
   leaderboardItem: {
     flexDirection: 'row',
@@ -195,6 +239,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     padding: 10,
+  },
+  storeButton: {
+    width: '100%',
+    backgroundColor: colors.coin,
+    padding: 16,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginBottom: 10,
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+    elevation: 4,
+  },
+  storeButtonText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text,
   },
   startButton: {
     width: '100%',

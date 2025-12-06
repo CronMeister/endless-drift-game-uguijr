@@ -1,6 +1,7 @@
 
-import { GameObject, Position } from '@/types/gameTypes';
+import { GameObject, Position, PlayerInventory } from '@/types/gameTypes';
 import { GAME_CONFIG } from '@/constants/gameConstants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const checkCollision = (obj1: GameObject, obj2: GameObject): boolean => {
   return (
@@ -43,4 +44,38 @@ export const playHapticFeedback = async () => {
   } catch (error) {
     console.log('Haptics not available:', error);
   }
+};
+
+const INVENTORY_KEY = '@endless_drift_inventory';
+
+export const saveInventory = async (inventory: PlayerInventory): Promise<void> => {
+  try {
+    const jsonValue = JSON.stringify(inventory);
+    await AsyncStorage.setItem(INVENTORY_KEY, jsonValue);
+    console.log('Inventory saved:', inventory);
+  } catch (error) {
+    console.error('Error saving inventory:', error);
+  }
+};
+
+export const loadInventory = async (): Promise<PlayerInventory> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(INVENTORY_KEY);
+    if (jsonValue != null) {
+      const inventory = JSON.parse(jsonValue);
+      console.log('Inventory loaded:', inventory);
+      return inventory;
+    }
+  } catch (error) {
+    console.error('Error loading inventory:', error);
+  }
+  
+  // Return default inventory
+  return {
+    coins: 0,
+    selectedCarSkin: 'default',
+    selectedWorldSkin: 'default',
+    unlockedCarSkins: ['default'],
+    unlockedWorldSkins: ['default'],
+  };
 };

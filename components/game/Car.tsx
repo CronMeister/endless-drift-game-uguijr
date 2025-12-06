@@ -8,16 +8,42 @@ interface CarProps {
   x: number;
   y: number;
   hasShield: boolean;
+  carColor?: string;
 }
 
-export const Car: React.FC<CarProps> = ({ x, y, hasShield }) => {
+export const Car: React.FC<CarProps> = ({ x, y, hasShield, carColor = colors.car }) => {
   return (
     <View style={[styles.container, { left: x, top: y }]}>
       {hasShield && <View style={styles.shield} />}
       <View style={styles.car}>
-        <View style={styles.carTop} />
-        <View style={styles.carBody} />
-        <View style={styles.carBottom} />
+        {/* Car roof/windshield */}
+        <View style={[styles.carRoof, { backgroundColor: carColor }]}>
+          <View style={styles.windshield} />
+        </View>
+        
+        {/* Car body */}
+        <View style={[styles.carBody, { backgroundColor: carColor }]}>
+          {/* Headlights */}
+          <View style={styles.headlightsContainer}>
+            <View style={styles.headlight} />
+            <View style={styles.headlight} />
+          </View>
+          
+          {/* Side windows */}
+          <View style={styles.sideWindows}>
+            <View style={styles.sideWindow} />
+            <View style={styles.sideWindow} />
+          </View>
+          
+          {/* Wheels */}
+          <View style={styles.wheelsContainer}>
+            <View style={styles.wheel} />
+            <View style={styles.wheel} />
+          </View>
+        </View>
+        
+        {/* Car bumper */}
+        <View style={[styles.carBumper, { backgroundColor: carColor }]} />
       </View>
     </View>
   );
@@ -45,25 +71,75 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'space-between',
   },
-  carTop: {
+  carRoof: {
     width: '70%',
-    height: '25%',
-    backgroundColor: colors.primary,
+    height: '22%',
     alignSelf: 'center',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+    elevation: 2,
+  },
+  windshield: {
+    width: '80%',
+    height: '70%',
+    backgroundColor: 'rgba(135, 206, 250, 0.6)',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
   carBody: {
     width: '100%',
-    height: '50%',
-    backgroundColor: colors.primary,
-    borderRadius: 5,
+    height: '60%',
+    borderRadius: 6,
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+    elevation: 3,
   },
-  carBottom: {
+  headlightsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+  },
+  headlight: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFEB3B',
+    boxShadow: '0px 0px 4px rgba(255, 235, 59, 0.8)',
+  },
+  sideWindows: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 6,
+  },
+  sideWindow: {
+    width: 16,
+    height: 20,
+    backgroundColor: 'rgba(135, 206, 250, 0.5)',
+    borderRadius: 3,
+  },
+  wheelsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: -2,
+  },
+  wheel: {
+    width: 12,
+    height: 16,
+    backgroundColor: '#212121',
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#757575',
+  },
+  carBumper: {
     width: '100%',
     height: '10%',
-    backgroundColor: colors.primary,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+    elevation: 2,
   },
 });

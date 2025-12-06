@@ -9,14 +9,16 @@ import {
   Alert,
 } from 'react-native';
 import { colors } from '@/styles/commonStyles';
-import { GAME_CONFIG } from '@/constants/gameConstants';
-import { GameState, Obstacle, Pickup, LeaderboardEntry } from '@/types/gameTypes';
+import { GAME_CONFIG, CAR_SKINS, WORLD_SKINS } from '@/constants/gameConstants';
+import { GameState, Obstacle, Pickup, LeaderboardEntry, PlayerInventory } from '@/types/gameTypes';
 import {
   checkCollision,
   getLanePosition,
   generateId,
   getRandomLane,
   playHapticFeedback,
+  saveInventory,
+  loadInventory,
 } from '@/utils/gameUtils';
 import { Road } from '@/components/game/Road';
 import { Car } from '@/components/game/Car';
@@ -25,11 +27,21 @@ import { Pickup as PickupComponent } from '@/components/game/Pickup';
 import { HUD } from '@/components/game/HUD';
 import { GameOverScreen } from '@/components/game/GameOverScreen';
 import { MainMenu } from '@/components/game/MainMenu';
+import { Store } from '@/components/game/Store';
 import { BannerAd, InterstitialAd, RewardedAd } from '@/components/game/AdMobPlaceholder';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function EndlessDriftGame() {
+  // Player inventory
+  const [inventory, setInventory] = useState<PlayerInventory>({
+    coins: 0,
+    selectedCarSkin: 'default',
+    selectedWorldSkin: 'default',
+    unlockedCarSkins: ['default'],
+    unlockedWorldSkins: ['default'],
+  });
+
   // Game state
   const [gameState, setGameState] = useState<GameState>({
     isPlaying: false,
@@ -42,6 +54,8 @@ export default function EndlessDriftGame() {
     hasShield: false,
     speedBoostActive: false,
     speedBoostTimer: 0,
+    coins: 0,
+    crashCount: 0,
   });
 
   // Player state
@@ -54,7 +68,8 @@ export default function EndlessDriftGame() {
   const [pickups, setPickups] = useState<Pickup[]>([]);
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  // Leaderboard
+  // UI state
+  const [showStore, setShowStore] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [gamesPlayed, setGamesPlayed] = useState(0);
 
@@ -66,11 +81,22 @@ export default function EndlessDriftGame() {
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const obstacleSpawnRef = useRef<NodeJS.Timeout | null>(null);
   const pickupSpawnRef = useRef<NodeJS.Timeout | null>(null);
+  const coinSpawnRef = useRef<NodeJS.Timeout | null>(null);
   const difficultyRef = useRef<NodeJS.Timeout | null>(null);
   const lastObstacleSpawnTime = useRef(0);
   const lastPickupSpawnTime = useRef(0);
+  const lastCoinSpawnTime = useRef(0);
   const touchStartX = useRef(0);
   const crashPosition = useRef<{ lane: number; obstacles: Obstacle[]; pickups: Pickup[]; distance: number } | null>(null);
+
+  // Load inventory on mount
+  useEffect(() => {
+    loadInventory().then(setInventory);
+  }, []);
+
+  // Get selected skins
+  const selectedCarSkin = CAR_SKINS.find(s => s.id === inventory.selectedCarSkin) || CAR_SKINS[0];
+  const selectedWorldSkin = WORLD_SKINS.find(s => s.id === inventory.selectedWorldSkin) || WORLD_SKINS[0];
 
   // Initialize game
   const initGame = useCallback(() => {
@@ -85,6 +111,8 @@ export default function EndlessDriftGame() {
       hasShield: false,
       speedBoostActive: false,
       speedBoostTimer: 0,
+      coins: 0,
+      crashCount: 0,
     });
     setPlayerLane(1);
     setPlayerX(getLanePosition(1));
@@ -128,6 +156,7 @@ export default function EndlessDriftGame() {
         isPlaying: true,
         hasShield: true,
         fuel: Math.max(prev.fuel, 50),
+        crashCount: prev.crashCount + 1,
       }));
       setPlayerLane(crashPosition.current.lane);
       setPlayerX(getLanePosition(crashPosition.current.lane));
@@ -152,7 +181,98 @@ export default function EndlessDriftGame() {
 
   // Go to main menu
   const goToMainMenu = useCallback(() => {
+    // Save coins to inventory
+    setInventory(prev => {
+      const updated = { ...prev, coins: prev.coins + gameState.coins };
+      saveInventory(updated);
+      return updated;
+    });
     setGameState(prev => ({ ...prev, isPlaying: false, isGameOver: false }));
+  }, [gameState.coins]);
+
+  // Store handlers
+  const handleOpenStore = useCallback(() => {
+    setShowStore(true);
+  }, []);
+
+  const handleCloseStore = useCallback(() => {
+    setShowStore(false);
+  }, []);
+
+  const handlePurchaseCarSkin = useCallback((skinId: string) => {
+    const skin = CAR_SKINS.find(s => s.id === skinId);
+    if (!skin) return;
+
+    setInventory(prev => {
+      if (prev.coins >= skin.price) {
+        const updated = {
+          ...prev,
+          coins: prev.coins - skin.price,
+          unlockedCarSkins: [...prev.unlockedCarSkins, skinId],
+          selectedCarSkin: skinId,
+        };
+        saveInventory(updated);
+        Alert.alert('Success!', `You purchased ${skin.name}!`);
+        return updated;
+      }
+      return prev;
+    });
+  }, []);
+
+  const handlePurchaseWorldSkin = useCallback((skinId: string) => {
+    const skin = WORLD_SKINS.find(s => s.id === skinId);
+    if (!skin) return;
+
+    setInventory(prev => {
+      if (prev.coins >= skin.price) {
+        const updated = {
+          ...prev,
+          coins: prev.coins - skin.price,
+          unlockedWorldSkins: [...prev.unlockedWorldSkins, skinId],
+          selectedWorldSkin: skinId,
+        };
+        saveInventory(updated);
+        Alert.alert('Success!', `You purchased ${skin.name}!`);
+        return updated;
+      }
+      return prev;
+    });
+  }, []);
+
+  const handlePurchaseCoins = useCallback((packageId: string) => {
+    // In a real app, this would trigger IAP
+    // For now, just simulate the purchase
+    const packages = {
+      small: 100,
+      medium: 300,
+      large: 700,
+      mega: 1500,
+      ultimate: 5000,
+    };
+    
+    const coins = packages[packageId as keyof typeof packages] || 0;
+    setInventory(prev => {
+      const updated = { ...prev, coins: prev.coins + coins };
+      saveInventory(updated);
+      Alert.alert('Purchase Successful!', `You received ${coins} coins!`);
+      return updated;
+    });
+  }, []);
+
+  const handleSelectCarSkin = useCallback((skinId: string) => {
+    setInventory(prev => {
+      const updated = { ...prev, selectedCarSkin: skinId };
+      saveInventory(updated);
+      return updated;
+    });
+  }, []);
+
+  const handleSelectWorldSkin = useCallback((skinId: string) => {
+    setInventory(prev => {
+      const updated = { ...prev, selectedWorldSkin: skinId };
+      saveInventory(updated);
+      return updated;
+    });
   }, []);
 
   // Handle swipe
@@ -238,12 +358,38 @@ export default function EndlessDriftGame() {
     lastPickupSpawnTime.current = now;
   }, []);
 
+  // Spawn coin
+  const spawnCoin = useCallback(() => {
+    const now = Date.now();
+    if (now - lastCoinSpawnTime.current < GAME_CONFIG.COIN_SPAWN_INTERVAL) {
+      return;
+    }
+
+    const lane = getRandomLane();
+
+    const newCoin: Pickup = {
+      id: generateId(),
+      position: {
+        x: getLanePosition(lane) + (GAME_CONFIG.LANE_WIDTH - GAME_CONFIG.PICKUP_WIDTH) / 2,
+        y: -GAME_CONFIG.PICKUP_HEIGHT,
+      },
+      width: GAME_CONFIG.PICKUP_WIDTH,
+      height: GAME_CONFIG.PICKUP_HEIGHT,
+      lane,
+      type: 'coin',
+    };
+
+    setPickups(prev => [...prev, newCoin]);
+    lastCoinSpawnTime.current = now;
+  }, []);
+
   // Game loop
   useEffect(() => {
     if (!gameState.isPlaying || gameState.isGameOver) {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
       if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
       if (pickupSpawnRef.current) clearInterval(pickupSpawnRef.current);
+      if (coinSpawnRef.current) clearInterval(coinSpawnRef.current);
       if (difficultyRef.current) clearInterval(difficultyRef.current);
       return;
     }
@@ -282,7 +428,7 @@ export default function EndlessDriftGame() {
             pickups: [...pickups],
             distance: newDistance,
           };
-          return { ...prev, isGameOver: true, fuel: 0 };
+          return { ...prev, isGameOver: true, fuel: 0, crashCount: prev.crashCount + 1 };
         }
 
         return {
@@ -339,6 +485,11 @@ export default function EndlessDriftGame() {
       spawnPickup();
     }, GAME_CONFIG.PICKUP_SPAWN_INTERVAL);
 
+    // Spawn coins
+    coinSpawnRef.current = setInterval(() => {
+      spawnCoin();
+    }, GAME_CONFIG.COIN_SPAWN_INTERVAL);
+
     // Increase difficulty
     difficultyRef.current = setInterval(() => {
       setGameState(prev => ({
@@ -351,9 +502,10 @@ export default function EndlessDriftGame() {
       if (gameLoopRef.current) clearInterval(gameLoopRef.current);
       if (obstacleSpawnRef.current) clearInterval(obstacleSpawnRef.current);
       if (pickupSpawnRef.current) clearInterval(pickupSpawnRef.current);
+      if (coinSpawnRef.current) clearInterval(coinSpawnRef.current);
       if (difficultyRef.current) clearInterval(difficultyRef.current);
     };
-  }, [gameState.isPlaying, gameState.isGameOver, gameState.speed, spawnObstacle, spawnPickup, playerLane, obstacles, pickups]);
+  }, [gameState.isPlaying, gameState.isGameOver, gameState.speed, spawnObstacle, spawnPickup, spawnCoin, playerLane, obstacles, pickups]);
 
   // Check collisions
   useEffect(() => {
@@ -384,7 +536,7 @@ export default function EndlessDriftGame() {
             pickups: [...pickups],
             distance: gameState.distance,
           };
-          setGameState(prev => ({ ...prev, isGameOver: true }));
+          setGameState(prev => ({ ...prev, isGameOver: true, crashCount: prev.crashCount + 1 }));
         }
         break;
       }
@@ -398,10 +550,13 @@ export default function EndlessDriftGame() {
         
         setGameState(prev => {
           let updates: Partial<GameState> = {
-            score: prev.score + GAME_CONFIG.PICKUP_SCORE,
+            score: prev.score + (pickup.type === 'coin' ? GAME_CONFIG.COIN_SCORE : GAME_CONFIG.PICKUP_SCORE),
           };
 
           switch (pickup.type) {
+            case 'coin':
+              updates.coins = prev.coins + GAME_CONFIG.COIN_VALUE;
+              break;
             case 'fuel':
               updates.fuel = Math.min(100, prev.fuel + GAME_CONFIG.FUEL_PICKUP_AMOUNT);
               break;
@@ -426,24 +581,51 @@ export default function EndlessDriftGame() {
   // Save score to leaderboard
   useEffect(() => {
     if (gameState.isGameOver && gameState.score > 0) {
-      // This would normally save to a backend/database
-      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance);
+      // Save coins to inventory
+      setInventory(prev => {
+        const updated = { ...prev, coins: prev.coins + gameState.coins };
+        saveInventory(updated);
+        return updated;
+      });
+      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance, 'Coins:', gameState.coins);
     }
-  }, [gameState.isGameOver, gameState.score, gameState.distance]);
+  }, [gameState.isGameOver, gameState.score, gameState.distance, gameState.coins]);
+
+  // Render store
+  if (showStore) {
+    return (
+      <View style={styles.container}>
+        <Store
+          inventory={inventory}
+          onPurchaseCarSkin={handlePurchaseCarSkin}
+          onPurchaseWorldSkin={handlePurchaseWorldSkin}
+          onPurchaseCoins={handlePurchaseCoins}
+          onSelectCarSkin={handleSelectCarSkin}
+          onSelectWorldSkin={handleSelectWorldSkin}
+          onClose={handleCloseStore}
+        />
+      </View>
+    );
+  }
 
   // Render main menu
   if (!gameState.isPlaying && !gameState.isGameOver) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: selectedWorldSkin.backgroundColor }]}>
         <BannerAd />
-        <MainMenu onStartGame={startGame} leaderboard={leaderboard} />
+        <MainMenu 
+          onStartGame={startGame} 
+          onOpenStore={handleOpenStore}
+          leaderboard={leaderboard} 
+          coins={inventory.coins}
+        />
       </View>
     );
   }
 
   return (
     <View
-      style={styles.container}
+      style={[styles.container, { backgroundColor: selectedWorldSkin.backgroundColor }]}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -451,7 +633,11 @@ export default function EndlessDriftGame() {
       
       {/* Game area */}
       <View style={styles.gameArea}>
-        <Road scrollOffset={scrollOffset} />
+        <Road 
+          scrollOffset={scrollOffset} 
+          roadColor={selectedWorldSkin.roadColor}
+          roadLineColor={selectedWorldSkin.roadLineColor}
+        />
         
         {/* Obstacles */}
         {obstacles.map(obstacle => (
@@ -464,7 +650,12 @@ export default function EndlessDriftGame() {
         ))}
         
         {/* Player car */}
-        <Car x={playerX} y={playerY} hasShield={gameState.hasShield} />
+        <Car 
+          x={playerX} 
+          y={playerY} 
+          hasShield={gameState.hasShield}
+          carColor={selectedCarSkin.color}
+        />
       </View>
 
       {/* HUD */}
@@ -474,6 +665,7 @@ export default function EndlessDriftGame() {
         fuel={gameState.fuel}
         speedBoostActive={gameState.speedBoostActive}
         speedBoostTimer={gameState.speedBoostTimer}
+        coins={gameState.coins}
       />
 
       {/* Game over screen */}
@@ -481,6 +673,8 @@ export default function EndlessDriftGame() {
         <GameOverScreen
           score={gameState.score}
           distance={gameState.distance}
+          coins={gameState.coins}
+          crashCount={gameState.crashCount}
           onRestart={restartGame}
           onWatchAd={watchAdToContinue}
           onMainMenu={goToMainMenu}
@@ -504,7 +698,6 @@ export default function EndlessDriftGame() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   gameArea: {
     flex: 1,

@@ -8,6 +8,8 @@ import { LeaderboardEntry } from '@/types/gameTypes';
 interface GameOverScreenProps {
   score: number;
   distance: number;
+  coins: number;
+  crashCount: number;
   onRestart: () => void;
   onWatchAd: () => void;
   onMainMenu: () => void;
@@ -17,6 +19,8 @@ interface GameOverScreenProps {
 export const GameOverScreen: React.FC<GameOverScreenProps> = ({
   score,
   distance,
+  coins,
+  crashCount,
   onRestart,
   onWatchAd,
   onMainMenu,
@@ -32,6 +36,9 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
     }
   };
 
+  // Only show "Watch Ad to Continue" after the first crash
+  const showAdContinue = crashCount === 1;
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -45,6 +52,10 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>DISTANCE</Text>
             <Text style={styles.statValue}>{formatDistance(distance)}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>COINS</Text>
+            <Text style={[styles.statValue, { color: colors.coin }]}>💰 {coins}</Text>
           </View>
         </View>
 
@@ -87,25 +98,27 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.adButton]}
-            onPress={onWatchAd}
-          >
-            <Text style={styles.buttonText}>WATCH AD TO CONTINUE</Text>
-          </TouchableOpacity>
+          {showAdContinue && (
+            <TouchableOpacity
+              style={[styles.button, styles.adButton]}
+              onPress={onWatchAd}
+            >
+              <Text style={styles.buttonText}>📺 WATCH AD TO CONTINUE</Text>
+            </TouchableOpacity>
+          )}
           
           <TouchableOpacity
             style={[styles.button, styles.restartButton]}
             onPress={onRestart}
           >
-            <Text style={styles.buttonText}>RESTART</Text>
+            <Text style={styles.buttonText}>🔄 RESTART</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[styles.button, styles.menuButton]}
             onPress={onMainMenu}
           >
-            <Text style={styles.buttonText}>MAIN MENU</Text>
+            <Text style={styles.buttonText}>🏠 RETURN HOME</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -151,13 +164,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textSecondary,
     marginBottom: 5,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.primary,
   },
