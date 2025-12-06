@@ -25,15 +25,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onOpenStore, le
           <Text style={styles.coinsText}>{coins} Coins</Text>
         </View>
 
-        <View style={styles.instructionsContainer}>
-          <Text style={styles.instructionsTitle}>HOW TO PLAY</Text>
-          <Text style={styles.instructionText}>- Swipe left/right to change lanes</Text>
-          <Text style={styles.instructionText}>- Avoid obstacles and collect pickups</Text>
-          <Text style={styles.instructionText}>- Collect coins to unlock new cars & worlds</Text>
-          <Text style={styles.instructionText}>- Don&apos;t run out of fuel!</Text>
-          <Text style={styles.instructionText}>- Speed increases over time</Text>
-        </View>
-
         <View style={styles.pickupsContainer}>
           <Text style={styles.pickupsTitle}>PICKUPS</Text>
           <View style={styles.pickupItem}>
@@ -129,27 +120,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: colors.text,
-  },
-  instructionsContainer: {
-    width: '100%',
-    backgroundColor: colors.card,
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
-  },
-  instructionsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  instructionText: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 5,
   },
   pickupsContainer: {
     width: '100%',

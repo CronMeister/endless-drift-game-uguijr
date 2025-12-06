@@ -41,6 +41,8 @@ export default function EndlessDriftGame() {
     hasShield: false,
     speedBoostActive: false,
     speedBoostTimer: 0,
+    coins: 0,
+    crashCount: 0,
   });
 
   // Player state
@@ -84,6 +86,8 @@ export default function EndlessDriftGame() {
       hasShield: false,
       speedBoostActive: false,
       speedBoostTimer: 0,
+      coins: 0,
+      crashCount: 0,
     });
     setPlayerLane(1);
     setPlayerX(getLanePosition(1));
@@ -127,6 +131,7 @@ export default function EndlessDriftGame() {
         isPlaying: true,
         hasShield: true,
         fuel: Math.max(prev.fuel, 50),
+        crashCount: prev.crashCount + 1,
       }));
       setPlayerLane(crashPosition.current.lane);
       setPlayerX(getLanePosition(crashPosition.current.lane));
@@ -281,7 +286,7 @@ export default function EndlessDriftGame() {
             pickups: [...pickups],
             distance: newDistance,
           };
-          return { ...prev, isGameOver: true, fuel: 0 };
+          return { ...prev, isGameOver: true, fuel: 0, crashCount: prev.crashCount + 1 };
         }
 
         return {
@@ -383,7 +388,7 @@ export default function EndlessDriftGame() {
             pickups: [...pickups],
             distance: gameState.distance,
           };
-          setGameState(prev => ({ ...prev, isGameOver: true }));
+          setGameState(prev => ({ ...prev, isGameOver: true, crashCount: prev.crashCount + 1 }));
         }
         break;
       }
@@ -401,6 +406,10 @@ export default function EndlessDriftGame() {
           };
 
           switch (pickup.type) {
+            case 'coin':
+              updates.coins = prev.coins + GAME_CONFIG.COIN_VALUE;
+              updates.score = prev.score + GAME_CONFIG.COIN_SCORE;
+              break;
             case 'fuel':
               updates.fuel = Math.min(100, prev.fuel + GAME_CONFIG.FUEL_PICKUP_AMOUNT);
               break;
@@ -426,16 +435,21 @@ export default function EndlessDriftGame() {
   useEffect(() => {
     if (gameState.isGameOver && gameState.score > 0) {
       // This would normally save to a backend/database
-      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance);
+      console.log('Game over! Final score:', gameState.score, 'Distance:', gameState.distance, 'Coins:', gameState.coins);
     }
-  }, [gameState.isGameOver, gameState.score, gameState.distance]);
+  }, [gameState.isGameOver, gameState.score, gameState.distance, gameState.coins]);
 
   // Render main menu
   if (!gameState.isPlaying && !gameState.isGameOver) {
     return (
       <View style={styles.container}>
         <BannerAd />
-        <MainMenu onStartGame={startGame} leaderboard={leaderboard} />
+        <MainMenu 
+          onStartGame={startGame} 
+          onOpenStore={() => console.log('Store not available on iOS simple version')}
+          leaderboard={leaderboard}
+          coins={0}
+        />
       </View>
     );
   }
@@ -473,6 +487,8 @@ export default function EndlessDriftGame() {
         fuel={gameState.fuel}
         speedBoostActive={gameState.speedBoostActive}
         speedBoostTimer={gameState.speedBoostTimer}
+        coins={gameState.coins}
+        onExitToHome={goToMainMenu}
       />
 
       {/* Game over screen */}
@@ -480,6 +496,8 @@ export default function EndlessDriftGame() {
         <GameOverScreen
           score={gameState.score}
           distance={gameState.distance}
+          coins={gameState.coins}
+          crashCount={gameState.crashCount}
           onRestart={restartGame}
           onWatchAd={watchAdToContinue}
           onMainMenu={goToMainMenu}

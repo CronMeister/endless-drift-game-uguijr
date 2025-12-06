@@ -666,6 +666,7 @@ export default function EndlessDriftGame() {
         speedBoostActive={gameState.speedBoostActive}
         speedBoostTimer={gameState.speedBoostTimer}
         coins={gameState.coins}
+        onExitToHome={goToMainMenu}
       />
 
       {/* Game over screen */}
