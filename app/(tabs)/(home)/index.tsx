@@ -43,6 +43,8 @@ export default function EndlessDriftGame() {
     selectedWorldSkin: 'default',
     unlockedCarSkins: ['default'],
     unlockedWorldSkins: ['default'],
+    dailyAdWatchCount: 0,
+    lastAdWatchDate: '',
   });
 
   // Game state
@@ -79,8 +81,8 @@ export default function EndlessDriftGame() {
   // Ad state
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [showRewarded, setShowRewarded] = useState(false);
-  const [rewardedAdPurpose, setRewardedAdPurpose] = useState<'continue' | 'coins'>('continue');
-  const [pendingCoinPackage, setPendingCoinPackage] = useState<string | null>(null);
+  const [rewardedAdPurpose, setRewardedAdPurpose] = useState<'continue' | 'car' | 'dailyCoins'>('continue');
+  const [pendingCarUnlock, setPendingCarUnlock] = useState<string | null>(null);
 
   // Refs
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,6 +102,12 @@ export default function EndlessDriftGame() {
   // Get selected skins
   const selectedCarSkin = CAR_SKINS.find(s => s.id === inventory.selectedCarSkin) || CAR_SKINS[0];
   const selectedWorldSkin = WORLD_SKINS.find(s => s.id === inventory.selectedWorldSkin) || WORLD_SKINS[0];
+
+  // Helper to get today's date string
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
 
   // Initialize game
   const initGame = useCallback(() => {
@@ -180,11 +188,18 @@ export default function EndlessDriftGame() {
     setShowRewarded(true);
   }, []);
 
-  // Watch ad for coins
-  const watchAdForCoins = useCallback((packageId: string) => {
-    console.log('Watch ad for coins clicked:', packageId);
-    setRewardedAdPurpose('coins');
-    setPendingCoinPackage(packageId);
+  // Watch ad for car unlock
+  const watchAdForCar = useCallback((skinId: string) => {
+    console.log('Watch ad for car clicked:', skinId);
+    setRewardedAdPurpose('car');
+    setPendingCarUnlock(skinId);
+    setShowRewarded(true);
+  }, []);
+
+  // Watch ad for daily coins
+  const watchAdForDailyCoins = useCallback(() => {
+    console.log('Watch ad for daily coins clicked');
+    setRewardedAdPurpose('dailyCoins');
     setShowRewarded(true);
   }, []);
 
@@ -196,25 +211,49 @@ export default function EndlessDriftGame() {
     if (rewarded) {
       if (rewardedAdPurpose === 'continue') {
         continueFromCrash();
-      } else if (rewardedAdPurpose === 'coins' && pendingCoinPackage) {
-        // TODO: Backend Integration - Track ad rewards in backend
-        const packages = {
-          small: 100,
-          medium: 300,
-        };
-        const coins = packages[pendingCoinPackage as keyof typeof packages] || 0;
+      } else if (rewardedAdPurpose === 'car' && pendingCarUnlock) {
+        // TODO: Backend Integration - Track car unlocks via ads in backend
+        const skin = CAR_SKINS.find(s => s.id === pendingCarUnlock);
+        if (skin) {
+          setInventory(prev => {
+            const updated = {
+              ...prev,
+              unlockedCarSkins: [...prev.unlockedCarSkins, pendingCarUnlock],
+              selectedCarSkin: pendingCarUnlock,
+            };
+            saveInventory(updated);
+            Alert.alert('Car Unlocked!', `You unlocked ${skin.name} by watching an ad!`);
+            return updated;
+          });
+        }
+        setPendingCarUnlock(null);
+      } else if (rewardedAdPurpose === 'dailyCoins') {
+        // TODO: Backend Integration - Track daily ad rewards in backend
+        const today = getTodayDateString();
         setInventory(prev => {
-          const updated = { ...prev, coins: prev.coins + coins };
+          const isNewDay = prev.lastAdWatchDate !== today;
+          const newCount = isNewDay ? 1 : prev.dailyAdWatchCount + 1;
+          
+          const updated = {
+            ...prev,
+            coins: prev.coins + GAME_CONFIG.AD_COIN_REWARD,
+            dailyAdWatchCount: newCount,
+            lastAdWatchDate: today,
+          };
           saveInventory(updated);
-          Alert.alert('Reward Received!', `You received ${coins} coins for watching the ad!`);
+          
+          const remaining = GAME_CONFIG.DAILY_AD_COIN_LIMIT - newCount;
+          Alert.alert(
+            'Reward Received!',
+            `You received ${GAME_CONFIG.AD_COIN_REWARD} coins!\n\nRemaining today: ${remaining}/${GAME_CONFIG.DAILY_AD_COIN_LIMIT}`
+          );
           return updated;
         });
-        setPendingCoinPackage(null);
       }
     }
     
     setRewardedAdPurpose('continue');
-  }, [rewardedAdPurpose, pendingCoinPackage, continueFromCrash]);
+  }, [rewardedAdPurpose, pendingCarUnlock, continueFromCrash]);
 
   // Go to main menu
   const goToMainMenu = useCallback(() => {
@@ -638,7 +677,8 @@ export default function EndlessDriftGame() {
           onPurchaseCarSkin={handlePurchaseCarSkin}
           onPurchaseWorldSkin={handlePurchaseWorldSkin}
           onPurchaseCoins={handlePurchaseCoins}
-          onWatchAdForCoins={watchAdForCoins}
+          onWatchAdForCar={watchAdForCar}
+          onWatchAdForDailyCoins={watchAdForDailyCoins}
           onSelectCarSkin={handleSelectCarSkin}
           onSelectWorldSkin={handleSelectWorldSkin}
           onClose={handleCloseStore}

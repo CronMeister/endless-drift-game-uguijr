@@ -49,6 +49,7 @@ export interface CarSkin {
   color: string;
   price: number;
   unlocked: boolean;
+  isAdUnlock?: boolean; // New: Mark if this car is unlocked via ad
 }
 
 export interface WorldSkin {
@@ -75,4 +76,6 @@ export interface PlayerInventory {
   selectedWorldSkin: string;
   unlockedCarSkins: string[];
   unlockedWorldSkins: string[];
+  dailyAdWatchCount: number; // New: Track daily ad watches for coins
+  lastAdWatchDate: string; // New: Track last ad watch date (YYYY-MM-DD format)
 }

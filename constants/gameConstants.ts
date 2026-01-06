@@ -60,6 +60,10 @@ export const GAME_CONFIG = {
   // Animation
   FRAME_RATE: 60,
   FRAME_INTERVAL: 1000 / 60,
+  
+  // Ads
+  DAILY_AD_COIN_LIMIT: 3, // Maximum 3 ad watches per day for coins
+  AD_COIN_REWARD: 10, // Coins earned per ad watch
 };
 
 export const COLORS = {
@@ -89,15 +93,17 @@ export const CAR_SKINS: CarSkin[] = [
     id: 'red_racer',
     name: 'Red Racer',
     color: '#F44336',
-    price: 500,
+    price: 0, // Changed to 0 since it's ad-unlocked
     unlocked: false,
+    isAdUnlock: true, // First ad-unlocked car
   },
   {
     id: 'green_machine',
     name: 'Green Machine',
     color: '#4CAF50',
-    price: 500,
+    price: 0, // Changed to 0 since it's ad-unlocked
     unlocked: false,
+    isAdUnlock: true, // Second ad-unlocked car
   },
   {
     id: 'purple_beast',
