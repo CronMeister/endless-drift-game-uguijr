@@ -10,6 +10,7 @@ interface StoreProps {
   onPurchaseCarSkin: (skinId: string) => void;
   onPurchaseWorldSkin: (skinId: string) => void;
   onPurchaseCoins: (packageId: string) => void;
+  onWatchAdForCoins: (packageId: string) => void;
   onSelectCarSkin: (skinId: string) => void;
   onSelectWorldSkin: (skinId: string) => void;
   onClose: () => void;
@@ -20,6 +21,7 @@ export const Store: React.FC<StoreProps> = ({
   onPurchaseCarSkin,
   onPurchaseWorldSkin,
   onPurchaseCoins,
+  onWatchAdForCoins,
   onSelectCarSkin,
   onSelectWorldSkin,
   onClose,
@@ -60,15 +62,27 @@ export const Store: React.FC<StoreProps> = ({
     }
   };
 
-  const handlePurchaseCoins = (pkg: CoinPackage) => {
-    Alert.alert(
-      'Purchase Coins',
-      `Buy ${pkg.coins} coins for ${pkg.priceRands}?\n\n(This is a placeholder - real IAP would be integrated here)`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Buy', onPress: () => onPurchaseCoins(pkg.id) },
-      ]
-    );
+  const handlePurchaseCoins = (pkg: CoinPackage, index: number) => {
+    // First two packages are "Watch Ad to Redeem"
+    if (index < 2) {
+      Alert.alert(
+        'Watch Ad',
+        `Watch a video ad to receive ${pkg.coins} coins for free!`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Watch Ad', onPress: () => onWatchAdForCoins(pkg.id) },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Purchase Coins',
+        `Buy ${pkg.coins} coins for ${pkg.priceRands}?\n\n(This is a placeholder - real IAP would be integrated here)`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Buy', onPress: () => onPurchaseCoins(pkg.id) },
+        ]
+      );
+    }
   };
 
   return (
@@ -194,19 +208,35 @@ export const Store: React.FC<StoreProps> = ({
 
           {activeTab === 'coins' && (
             <View style={styles.coinsGrid}>
-              {COIN_PACKAGES.map((pkg) => (
-                <TouchableOpacity
-                  key={pkg.id}
-                  style={styles.coinPackageCard}
-                  onPress={() => handlePurchaseCoins(pkg)}
-                >
-                  <Text style={styles.packageName}>{pkg.name}</Text>
-                  <Text style={styles.packageCoins}>💰 {pkg.coins} Coins</Text>
-                  <View style={styles.packagePriceTag}>
-                    <Text style={styles.packagePriceText}>{pkg.priceRands}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {COIN_PACKAGES.map((pkg, index) => {
+                const isAdReward = index < 2;
+                return (
+                  <TouchableOpacity
+                    key={pkg.id}
+                    style={[
+                      styles.coinPackageCard,
+                      isAdReward && styles.adRewardCard,
+                    ]}
+                    onPress={() => handlePurchaseCoins(pkg, index)}
+                  >
+                    {isAdReward && (
+                      <View style={styles.adBadge}>
+                        <Text style={styles.adBadgeText}>📺 WATCH AD</Text>
+                      </View>
+                    )}
+                    <Text style={styles.packageName}>{pkg.name}</Text>
+                    <Text style={styles.packageCoins}>💰 {pkg.coins} Coins</Text>
+                    <View style={[
+                      styles.packagePriceTag,
+                      isAdReward && styles.adPriceTag,
+                    ]}>
+                      <Text style={styles.packagePriceText}>
+                        {isAdReward ? 'Watch Ad to Redeem' : pkg.priceRands}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </ScrollView>
@@ -404,6 +434,26 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.coin,
   },
+  adRewardCard: {
+    borderColor: colors.speedBoost,
+    backgroundColor: 'rgba(255, 213, 79, 0.1)',
+  },
+  adBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.speedBoost,
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+    elevation: 3,
+  },
+  adBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.text,
+  },
   packageName: {
     fontSize: 20,
     fontWeight: '800',
@@ -422,8 +472,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
+  adPriceTag: {
+    backgroundColor: colors.speedBoost,
+  },
   packagePriceText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: '#FFFFFF',
   },

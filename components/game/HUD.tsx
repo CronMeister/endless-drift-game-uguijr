@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { formatDistance, formatScore } from '@/utils/gameUtils';
+import { IconSymbol } from '@/components/IconSymbol';
 
 interface HUDProps {
   score: number;
@@ -11,7 +12,7 @@ interface HUDProps {
   speedBoostActive: boolean;
   speedBoostTimer: number;
   coins: number;
-  onExitToHome?: () => void;
+  onProfilePress?: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -21,6 +22,7 @@ export const HUD: React.FC<HUDProps> = ({
   speedBoostActive,
   speedBoostTimer,
   coins,
+  onProfilePress,
 }) => {
   return (
     <View style={styles.container}>
@@ -30,14 +32,32 @@ export const HUD: React.FC<HUDProps> = ({
           <Text style={styles.label}>SCORE</Text>
           <Text style={styles.score}>{formatScore(score)}</Text>
         </View>
-        <View style={styles.coinsContainer}>
-          <Text style={styles.coinIcon}>💰</Text>
-          <Text style={styles.coins}>{coins}</Text>
+        <View style={styles.rightSection}>
+          <View style={styles.coinsContainer}>
+            <Text style={styles.coinIcon}>💰</Text>
+            <Text style={styles.coins}>{coins}</Text>
+          </View>
+          {onProfilePress && (
+            <TouchableOpacity 
+              style={styles.profileButton} 
+              onPress={onProfilePress}
+              activeOpacity={0.7}
+            >
+              <IconSymbol 
+                ios_icon_name="person.circle.fill" 
+                android_material_icon_name="account-circle" 
+                size={32} 
+                color={colors.primary} 
+              />
+            </TouchableOpacity>
+          )}
         </View>
-        <View style={styles.distanceContainer}>
-          <Text style={styles.label}>DISTANCE</Text>
-          <Text style={styles.distance}>{formatDistance(distance)}</Text>
-        </View>
+      </View>
+
+      {/* Distance */}
+      <View style={styles.distanceRow}>
+        <Text style={styles.distanceLabel}>DISTANCE</Text>
+        <Text style={styles.distance}>{formatDistance(distance)}</Text>
       </View>
 
       {/* Fuel bar */}
@@ -82,10 +102,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   scoreContainer: {
     alignItems: 'flex-start',
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   coinsContainer: {
     flexDirection: 'row',
@@ -106,8 +131,31 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
   },
-  distanceContainer: {
-    alignItems: 'flex-end',
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+    elevation: 3,
+  },
+  distanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  distanceLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  distance: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.primary,
   },
   label: {
     fontSize: 12,
@@ -119,11 +167,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: colors.text,
-  },
-  distance: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.primary,
   },
   fuelBarContainer: {
     flexDirection: 'row',

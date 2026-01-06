@@ -29,10 +29,13 @@ import { GameOverScreen } from '@/components/game/GameOverScreen';
 import { MainMenu } from '@/components/game/MainMenu';
 import { Store } from '@/components/game/Store';
 import { BannerAd, InterstitialAd, RewardedAd } from '@/components/game/AdMobPlaceholder';
+import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function EndlessDriftGame() {
+  const router = useRouter();
+
   // Player inventory
   const [inventory, setInventory] = useState<PlayerInventory>({
     coins: 0,
@@ -76,6 +79,8 @@ export default function EndlessDriftGame() {
   // Ad state
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [showRewarded, setShowRewarded] = useState(false);
+  const [rewardedAdPurpose, setRewardedAdPurpose] = useState<'continue' | 'coins'>('continue');
+  const [pendingCoinPackage, setPendingCoinPackage] = useState<string | null>(null);
 
   // Refs
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
@@ -98,6 +103,7 @@ export default function EndlessDriftGame() {
 
   // Initialize game
   const initGame = useCallback(() => {
+    console.log('Initializing game...');
     setGameState({
       isPlaying: true,
       isPaused: false,
@@ -125,7 +131,7 @@ export default function EndlessDriftGame() {
 
   // Start game
   const startGame = useCallback(() => {
-    console.log('Starting game...');
+    console.log('Start game button pressed!');
     initGame();
   }, [initGame]);
 
@@ -169,16 +175,46 @@ export default function EndlessDriftGame() {
 
   // Watch ad to continue
   const watchAdToContinue = useCallback(() => {
+    console.log('Watch ad to continue clicked');
+    setRewardedAdPurpose('continue');
+    setShowRewarded(true);
+  }, []);
+
+  // Watch ad for coins
+  const watchAdForCoins = useCallback((packageId: string) => {
+    console.log('Watch ad for coins clicked:', packageId);
+    setRewardedAdPurpose('coins');
+    setPendingCoinPackage(packageId);
     setShowRewarded(true);
   }, []);
 
   // Handle rewarded ad close
   const handleRewardedAdClose = useCallback((rewarded: boolean) => {
+    console.log('Rewarded ad closed, rewarded:', rewarded);
     setShowRewarded(false);
+    
     if (rewarded) {
-      continueFromCrash();
+      if (rewardedAdPurpose === 'continue') {
+        continueFromCrash();
+      } else if (rewardedAdPurpose === 'coins' && pendingCoinPackage) {
+        // TODO: Backend Integration - Track ad rewards in backend
+        const packages = {
+          small: 100,
+          medium: 300,
+        };
+        const coins = packages[pendingCoinPackage as keyof typeof packages] || 0;
+        setInventory(prev => {
+          const updated = { ...prev, coins: prev.coins + coins };
+          saveInventory(updated);
+          Alert.alert('Reward Received!', `You received ${coins} coins for watching the ad!`);
+          return updated;
+        });
+        setPendingCoinPackage(null);
+      }
     }
-  }, [continueFromCrash]);
+    
+    setRewardedAdPurpose('continue');
+  }, [rewardedAdPurpose, pendingCoinPackage, continueFromCrash]);
 
   // Go to main menu
   const goToMainMenu = useCallback(() => {
@@ -197,12 +233,20 @@ export default function EndlessDriftGame() {
     setGameState(prev => ({ ...prev, isPlaying: false, isGameOver: false }));
   }, [gameState.coins, gameState.distance]);
 
+  // Navigate to profile
+  const handleProfilePress = useCallback(() => {
+    console.log('Profile button pressed');
+    router.push('/(tabs)/profile');
+  }, [router]);
+
   // Store handlers
   const handleOpenStore = useCallback(() => {
+    console.log('Opening store...');
     setShowStore(true);
   }, []);
 
   const handleCloseStore = useCallback(() => {
+    console.log('Closing store...');
     setShowStore(false);
   }, []);
 
@@ -247,6 +291,7 @@ export default function EndlessDriftGame() {
   }, []);
 
   const handlePurchaseCoins = useCallback((packageId: string) => {
+    // TODO: Backend Integration - Implement real IAP with backend verification
     // In a real app, this would trigger IAP
     // For now, just simulate the purchase
     const packages = {
@@ -336,7 +381,6 @@ export default function EndlessDriftGame() {
 
     setObstacles(prev => [...prev, newObstacle]);
     lastObstacleSpawnTime.current = now;
-    console.log(`Spawned ${type} obstacle in lane ${lane}`);
   }, []);
 
   // Spawn pickup
@@ -364,7 +408,6 @@ export default function EndlessDriftGame() {
 
     setPickups(prev => [...prev, newPickup]);
     lastPickupSpawnTime.current = now;
-    console.log(`Spawned ${type} pickup in lane ${lane}`);
   }, []);
 
   // Spawn coin
@@ -390,7 +433,6 @@ export default function EndlessDriftGame() {
 
     setPickups(prev => [...prev, newCoin]);
     lastCoinSpawnTime.current = now;
-    console.log(`Spawned coin in lane ${lane}`);
   }, []);
 
   // Game loop
@@ -596,6 +638,7 @@ export default function EndlessDriftGame() {
           onPurchaseCarSkin={handlePurchaseCarSkin}
           onPurchaseWorldSkin={handlePurchaseWorldSkin}
           onPurchaseCoins={handlePurchaseCoins}
+          onWatchAdForCoins={watchAdForCoins}
           onSelectCarSkin={handleSelectCarSkin}
           onSelectWorldSkin={handleSelectWorldSkin}
           onClose={handleCloseStore}
@@ -662,6 +705,7 @@ export default function EndlessDriftGame() {
         speedBoostActive={gameState.speedBoostActive}
         speedBoostTimer={gameState.speedBoostTimer}
         coins={gameState.coins}
+        onProfilePress={handleProfilePress}
       />
 
       {/* Game over screen */}
