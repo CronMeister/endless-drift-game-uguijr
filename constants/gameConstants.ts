@@ -22,17 +22,17 @@ export const GAME_CONFIG = {
   CAR_HEIGHT: 80,
   CAR_START_Y: SCREEN_HEIGHT * 0.75 - 40, // 1/4 from bottom (75% down the screen)
   
-  // Obstacles
+  // Obstacles - INCREASED SPACING for better gameplay
   OBSTACLE_WIDTH: 50,
   OBSTACLE_HEIGHT: 80,
-  OBSTACLE_SPAWN_INTERVAL: 800, // ms - spawn more frequently
-  MIN_OBSTACLE_DISTANCE: 200,
+  OBSTACLE_SPAWN_INTERVAL: 2200, // ms - increased from 800ms to 2200ms for adequate spacing
+  MIN_OBSTACLE_DISTANCE: 300, // Minimum distance between obstacles
   
   // Pickups
   PICKUP_WIDTH: 40,
   PICKUP_HEIGHT: 40,
-  PICKUP_SPAWN_INTERVAL: 1500, // ms
-  COIN_SPAWN_INTERVAL: 600, // ms - coins spawn more frequently
+  PICKUP_SPAWN_INTERVAL: 1800, // ms - slightly increased for better balance
+  COIN_SPAWN_INTERVAL: 800, // ms - coins spawn frequently
   
   // Game mechanics
   INITIAL_SPEED: 5,

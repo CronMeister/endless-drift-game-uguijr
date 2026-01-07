@@ -1,5 +1,5 @@
 
-import { GameObject, Position, PlayerInventory } from '@/types/gameTypes';
+import { GameObject, Position, PlayerInventory, LeaderboardEntry } from '@/types/gameTypes';
 import { GAME_CONFIG } from '@/constants/gameConstants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -47,6 +47,7 @@ export const playHapticFeedback = async () => {
 };
 
 const INVENTORY_KEY = '@endless_drift_inventory';
+const LEADERBOARD_KEY = '@endless_drift_leaderboard';
 
 export const saveInventory = async (inventory: PlayerInventory): Promise<void> => {
   try {
@@ -77,5 +78,64 @@ export const loadInventory = async (): Promise<PlayerInventory> => {
     selectedWorldSkin: 'default',
     unlockedCarSkins: ['default'],
     unlockedWorldSkins: ['default'],
+    dailyAdWatchCount: 0,
+    lastAdWatchDate: '',
   };
+};
+
+// Leaderboard functions
+export const saveLeaderboard = async (leaderboard: LeaderboardEntry[]): Promise<void> => {
+  try {
+    const jsonValue = JSON.stringify(leaderboard);
+    await AsyncStorage.setItem(LEADERBOARD_KEY, jsonValue);
+    console.log('Leaderboard saved:', leaderboard);
+  } catch (error) {
+    console.error('Error saving leaderboard:', error);
+  }
+};
+
+export const loadLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(LEADERBOARD_KEY);
+    if (jsonValue != null) {
+      const leaderboard = JSON.parse(jsonValue);
+      console.log('Leaderboard loaded:', leaderboard);
+      return leaderboard;
+    }
+  } catch (error) {
+    console.error('Error loading leaderboard:', error);
+  }
+  
+  return [];
+};
+
+export const addScoreToLeaderboard = async (
+  playerName: string,
+  score: number,
+  distance: number
+): Promise<LeaderboardEntry[]> => {
+  try {
+    const leaderboard = await loadLeaderboard();
+    
+    const newEntry: LeaderboardEntry = {
+      id: generateId(),
+      playerName: playerName.trim() || 'Anonymous',
+      score,
+      distance,
+      date: new Date().toISOString(),
+    };
+    
+    // Add new entry and sort by score (descending)
+    const updatedLeaderboard = [...leaderboard, newEntry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10); // Keep only top 10
+    
+    await saveLeaderboard(updatedLeaderboard);
+    console.log('Score added to leaderboard:', newEntry);
+    
+    return updatedLeaderboard;
+  } catch (error) {
+    console.error('Error adding score to leaderboard:', error);
+    return [];
+  }
 };

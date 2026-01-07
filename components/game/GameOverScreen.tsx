@@ -15,6 +15,7 @@ interface GameOverScreenProps {
   onWatchAd: () => void;
   onMainMenu: () => void;
   leaderboard: LeaderboardEntry[];
+  onSaveScore: (playerName: string) => void;
 }
 
 export const GameOverScreen: React.FC<GameOverScreenProps> = ({
@@ -26,6 +27,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
   onWatchAd,
   onMainMenu,
   leaderboard,
+  onSaveScore,
 }) => {
   const [playerName, setPlayerName] = useState('');
   const [nameSaved, setNameSaved] = useState(false);
@@ -33,6 +35,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
   const handleSaveName = () => {
     if (playerName.trim()) {
       setNameSaved(true);
+      onSaveScore(playerName);
       console.log('Saving score:', { playerName, score, distance });
     }
   };
@@ -79,11 +82,11 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
             </TouchableOpacity>
           </View>
         ) : (
-          <Text style={styles.savedText}>Score saved!</Text>
+          <Text style={styles.savedText}>✅ Score saved to leaderboard!</Text>
         )}
 
         <View style={styles.leaderboardContainer}>
-          <Text style={styles.leaderboardTitle}>LEADERBOARD</Text>
+          <Text style={styles.leaderboardTitle}>🏆 LEADERBOARD</Text>
           <ScrollView style={styles.leaderboardScroll}>
             {leaderboard.slice(0, 5).map((entry, index) => (
               <View key={entry.id} style={styles.leaderboardItem}>
