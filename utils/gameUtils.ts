@@ -1,8 +1,11 @@
 
-import { GameObject, Position, PlayerInventory, LeaderboardEntry } from '@/types/gameTypes';
-import { GAME_CONFIG } from '@/constants/gameConstants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
+import { GameObject, LeaderboardEntry, PlayerInventory } from '@/types/gameTypes';
+import { GAME_CONFIG } from '@/constants/gameConstants';
 
+// Collision detection
 export const checkCollision = (obj1: GameObject, obj2: GameObject): boolean => {
   return (
     obj1.position.x < obj2.position.x + obj2.width &&
@@ -12,101 +15,98 @@ export const checkCollision = (obj1: GameObject, obj2: GameObject): boolean => {
   );
 };
 
-export const isCloseCall = (obj1: GameObject, obj2: GameObject): boolean => {
-  const distance = Math.abs(obj1.position.y - obj2.position.y);
-  return distance < GAME_CONFIG.CLOSE_CALL_DISTANCE && obj1.lane === obj2.lane;
-};
-
+// Get lane position
 export const getLanePosition = (lane: number): number => {
   return lane * GAME_CONFIG.LANE_WIDTH + (GAME_CONFIG.LANE_WIDTH - GAME_CONFIG.CAR_WIDTH) / 2;
 };
 
+// Generate unique ID
 export const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Get random lane
 export const getRandomLane = (): number => {
   return Math.floor(Math.random() * GAME_CONFIG.NUM_LANES);
 };
 
+// Play haptic feedback
+export const playHapticFeedback = () => {
+  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }
+};
+
+// Format distance
 export const formatDistance = (distance: number): string => {
   return `${Math.floor(distance)}m`;
 };
 
+// Format score
 export const formatScore = (score: number): string => {
-  return score.toString().padStart(6, '0');
+  return score.toLocaleString();
 };
 
-export const playHapticFeedback = async () => {
-  try {
-    const Haptics = await import('expo-haptics');
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  } catch (error) {
-    console.log('Haptics not available:', error);
-  }
+// ============================================
+// PROGRESSIVE DIFFICULTY SYSTEM
+// ============================================
+
+/**
+ * Calculate speed multiplier based on distance traveled
+ * Speed increases progressively as the player travels further
+ * @param distance - Total distance traveled in the game
+ * @returns Speed multiplier (1.0 to MAX_SPEED_MULTIPLIER)
+ */
+export const calculateSpeedMultiplier = (distance: number): number => {
+  const multiplier = 1 + (distance * GAME_CONFIG.SPEED_INCREASE_RATE);
+  return Math.min(multiplier, GAME_CONFIG.MAX_SPEED_MULTIPLIER);
 };
 
-const INVENTORY_KEY = '@endless_drift_inventory';
-const LEADERBOARD_KEY = '@endless_drift_leaderboard';
-
-export const saveInventory = async (inventory: PlayerInventory): Promise<void> => {
-  try {
-    const jsonValue = JSON.stringify(inventory);
-    await AsyncStorage.setItem(INVENTORY_KEY, jsonValue);
-    console.log('Inventory saved:', inventory);
-  } catch (error) {
-    console.error('Error saving inventory:', error);
-  }
+/**
+ * Calculate obstacle spawn interval based on distance traveled
+ * Obstacles spawn more frequently as the player travels further
+ * @param distance - Total distance traveled in the game
+ * @returns Spawn interval in milliseconds
+ */
+export const calculateObstacleInterval = (distance: number): number => {
+  const reduction = distance * GAME_CONFIG.OBSTACLE_FREQUENCY_INCREASE_RATE;
+  const interval = GAME_CONFIG.BASE_OBSTACLE_SPAWN_INTERVAL - (reduction * 1000);
+  return Math.max(interval, GAME_CONFIG.MIN_OBSTACLE_SPAWN_INTERVAL);
 };
 
-export const loadInventory = async (): Promise<PlayerInventory> => {
-  try {
-    const jsonValue = await AsyncStorage.getItem(INVENTORY_KEY);
-    if (jsonValue != null) {
-      const inventory = JSON.parse(jsonValue);
-      console.log('Inventory loaded:', inventory);
-      return inventory;
-    }
-  } catch (error) {
-    console.error('Error loading inventory:', error);
-  }
-  
-  // Return default inventory
-  return {
-    coins: 0,
-    selectedCarSkin: 'default',
-    selectedWorldSkin: 'default',
-    unlockedCarSkins: ['default'],
-    unlockedWorldSkins: ['default'],
-    dailyAdWatchCount: 0,
-    lastAdWatchDate: '',
-  };
+/**
+ * Calculate current game speed based on base speed and distance
+ * @param baseSpeed - The base speed of the game
+ * @param distance - Total distance traveled
+ * @returns Current speed value
+ */
+export const calculateCurrentSpeed = (baseSpeed: number, distance: number): number => {
+  const multiplier = calculateSpeedMultiplier(distance);
+  return baseSpeed * multiplier;
 };
 
-// Leaderboard functions
-export const saveLeaderboard = async (leaderboard: LeaderboardEntry[]): Promise<void> => {
+// ============================================
+// LEADERBOARD FUNCTIONS
+// ============================================
+
+const LEADERBOARD_KEY = 'leaderboard';
+
+export const saveLeaderboard = async (leaderboard: LeaderboardEntry[]) => {
   try {
-    const jsonValue = JSON.stringify(leaderboard);
-    await AsyncStorage.setItem(LEADERBOARD_KEY, jsonValue);
-    console.log('Leaderboard saved:', leaderboard);
-  } catch (error) {
-    console.error('Error saving leaderboard:', error);
+    await AsyncStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
+  } catch (e) {
+    console.error("Error saving leaderboard", e);
   }
 };
 
 export const loadLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(LEADERBOARD_KEY);
-    if (jsonValue != null) {
-      const leaderboard = JSON.parse(jsonValue);
-      console.log('Leaderboard loaded:', leaderboard);
-      return leaderboard;
-    }
-  } catch (error) {
-    console.error('Error loading leaderboard:', error);
+    return jsonValue != null ? JSON.parse(jsonValue) : [];
+  } catch (e) {
+    console.error("Error loading leaderboard", e);
+    return [];
   }
-  
-  return [];
 };
 
 export const addScoreToLeaderboard = async (
@@ -116,26 +116,67 @@ export const addScoreToLeaderboard = async (
 ): Promise<LeaderboardEntry[]> => {
   try {
     const leaderboard = await loadLeaderboard();
-    
     const newEntry: LeaderboardEntry = {
       id: generateId(),
-      playerName: playerName.trim() || 'Anonymous',
+      playerName,
       score,
       distance,
       date: new Date().toISOString(),
     };
     
-    // Add new entry and sort by score (descending)
     const updatedLeaderboard = [...leaderboard, newEntry]
       .sort((a, b) => b.score - a.score)
-      .slice(0, 10); // Keep only top 10
+      .slice(0, 10);
     
     await saveLeaderboard(updatedLeaderboard);
-    console.log('Score added to leaderboard:', newEntry);
-    
     return updatedLeaderboard;
-  } catch (error) {
-    console.error('Error adding score to leaderboard:', error);
+  } catch (e) {
+    console.error("Error adding score to leaderboard", e);
     return [];
+  }
+};
+
+// ============================================
+// INVENTORY FUNCTIONS
+// ============================================
+
+const INVENTORY_KEY = 'playerInventory';
+
+export const saveInventory = async (inventory: PlayerInventory) => {
+  try {
+    await AsyncStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+  } catch (e) {
+    console.error("Error saving inventory", e);
+  }
+};
+
+export const loadInventory = async (): Promise<PlayerInventory> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(INVENTORY_KEY);
+    if (jsonValue != null) {
+      return JSON.parse(jsonValue);
+    }
+    
+    // Default inventory
+    return {
+      coins: 0,
+      selectedCarSkin: 'default',
+      selectedWorldSkin: 'default',
+      unlockedCarSkins: ['default'],
+      unlockedWorldSkins: ['default'],
+      dailyAdWatchCount: 0,
+      lastAdWatchDate: '',
+    };
+  } catch (e) {
+    console.error("Error loading inventory", e);
+    return {
+      coins: 0,
+      selectedCarSkin: 'default',
+      selectedWorldSkin: 'default',
+      unlockedCarSkins: ['default'],
+      unlockedWorldSkins: ['default'],
+      dailyAdWatchCount: 0,
+      lastAdWatchDate: '',
+    };
   }
 };

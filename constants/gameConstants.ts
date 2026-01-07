@@ -1,238 +1,130 @@
 
-import { Dimensions } from 'react-native';
 import { CarSkin, WorldSkin, CoinPackage } from '@/types/gameTypes';
+import { Dimensions } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Game configuration
 export const GAME_CONFIG = {
   // Screen dimensions
-  SCREEN_WIDTH,
-  SCREEN_HEIGHT,
-  
-  // Game area
-  GAME_WIDTH: Math.min(SCREEN_WIDTH, 400),
+  GAME_WIDTH: SCREEN_WIDTH,
   GAME_HEIGHT: SCREEN_HEIGHT,
-  
-  // Lanes
+
+  // Lane configuration
   NUM_LANES: 3,
-  LANE_WIDTH: Math.min(SCREEN_WIDTH, 400) / 3,
-  
-  // Player car - positioned 1/4 from bottom
-  CAR_WIDTH: 50,
-  CAR_HEIGHT: 80,
-  CAR_START_Y: SCREEN_HEIGHT * 0.75 - 40, // 1/4 from bottom (75% down the screen)
-  
-  // Obstacles - INCREASED SPACING for better gameplay
-  OBSTACLE_WIDTH: 50,
-  OBSTACLE_HEIGHT: 80,
-  OBSTACLE_SPAWN_INTERVAL: 2200, // ms - increased from 800ms to 2200ms for adequate spacing
+  LANE_WIDTH: SCREEN_WIDTH / 3,
+
+  // Car configuration
+  CAR_WIDTH: 60,
+  CAR_HEIGHT: 100,
+  CAR_START_Y: SCREEN_HEIGHT * 0.75, // Car positioned 3/4 down the screen
+
+  // Obstacle configuration
+  OBSTACLE_WIDTH: 60,
+  OBSTACLE_HEIGHT: 100,
   MIN_OBSTACLE_DISTANCE: 300, // Minimum distance between obstacles
-  
-  // Pickups
+
+  // Pickup configuration
   PICKUP_WIDTH: 40,
   PICKUP_HEIGHT: 40,
-  PICKUP_SPAWN_INTERVAL: 1800, // ms - slightly increased for better balance
-  COIN_SPAWN_INTERVAL: 800, // ms - coins spawn frequently
-  
-  // Game mechanics
+
+  // Speed configuration - PROGRESSIVE SPEED SYSTEM
   INITIAL_SPEED: 5,
+  BASE_SPEED: 5,
+  SPEED_INCREMENT: 0.001, // Gradual speed increase per frame (legacy system)
   MAX_SPEED: 15,
-  SPEED_INCREMENT: 0.001,
-  INITIAL_FUEL: 100,
-  FUEL_DRAIN_RATE: 0.06,
-  FUEL_PICKUP_AMOUNT: 30,
-  SPEED_BOOST_DURATION: 5000, // ms
   SPEED_BOOST_MULTIPLIER: 1.5,
+  SPEED_BOOST_DURATION: 3000,
   
+  // Progressive speed scaling
+  SPEED_INCREASE_RATE: 0.0005, // Speed increases by 0.05% per unit distance
+  MAX_SPEED_MULTIPLIER: 3, // Cap at 3x base speed
+
+  // Fuel configuration
+  INITIAL_FUEL: 100,
+  FUEL_DRAIN_RATE: 0.05,
+  FUEL_PICKUP_AMOUNT: 30,
+
+  // Spawn intervals - PROGRESSIVE OBSTACLE FREQUENCY SYSTEM
+  BASE_OBSTACLE_SPAWN_INTERVAL: 2200, // Base spawn interval in ms
+  MIN_OBSTACLE_SPAWN_INTERVAL: 800, // Fastest spawn rate in ms
+  OBSTACLE_FREQUENCY_INCREASE_RATE: 0.0003, // Obstacle frequency increases with distance
+  
+  PICKUP_SPAWN_INTERVAL: 3000,
+  COIN_SPAWN_INTERVAL: 1500,
+
   // Scoring
   DISTANCE_SCORE_MULTIPLIER: 1,
   PICKUP_SCORE: 50,
-  COIN_VALUE: 1,
   COIN_SCORE: 10,
-  CLOSE_CALL_SCORE: 100,
-  CLOSE_CALL_DISTANCE: 100,
-  COINS_PER_100M: 5, // Earn 5 coins per 100 meters traveled
-  
-  // Difficulty
-  DIFFICULTY_INCREASE_INTERVAL: 8000, // ms
-  OBSTACLE_FREQUENCY_INCREASE: 0.9, // multiplier
-  
-  // Animation
-  FRAME_RATE: 60,
-  FRAME_INTERVAL: 1000 / 60,
-  
-  // Ads
-  DAILY_AD_COIN_LIMIT: 3, // Maximum 3 ad watches per day for coins
-  AD_COIN_REWARD: 10, // Coins earned per ad watch
+  COIN_VALUE: 1,
+  COINS_PER_100M: 2, // Coins earned per 100m traveled
+
+  // Game loop
+  FRAME_INTERVAL: 16, // ~60 FPS
+
+  // Ad rewards
+  AD_COIN_REWARD: 10,
+  DAILY_AD_COIN_LIMIT: 3,
 };
 
-export const COLORS = {
-  road: '#424242',
-  roadLine: '#FFFFFF',
-  grass: '#4CAF50',
-  car: '#2962FF',
-  obstacle: '#F44336',
-  fuel: '#4CAF50',
-  speedBoost: '#FFD54F',
-  shield: '#00BCD4',
-  coin: '#FFD700',
-  text: '#212121',
-  textLight: '#757575',
-  background: '#E0E0E0',
-};
-
+// Car skins
 export const CAR_SKINS: CarSkin[] = [
-  {
-    id: 'default',
-    name: 'Classic Blue',
-    color: '#2962FF',
-    price: 0,
-    unlocked: true,
-  },
-  {
-    id: 'red_racer',
-    name: 'Red Racer',
-    color: '#F44336',
-    price: 0, // Changed to 0 since it's ad-unlocked
-    unlocked: false,
-    isAdUnlock: true, // First ad-unlocked car
-  },
-  {
-    id: 'green_machine',
-    name: 'Green Machine',
-    color: '#4CAF50',
-    price: 0, // Changed to 0 since it's ad-unlocked
-    unlocked: false,
-    isAdUnlock: true, // Second ad-unlocked car
-  },
-  {
-    id: 'purple_beast',
-    name: 'Purple Beast',
-    color: '#9C27B0',
-    price: 750,
-    unlocked: false,
-  },
-  {
-    id: 'golden_legend',
-    name: 'Golden Legend',
-    color: '#FFD700',
-    price: 1000,
-    unlocked: false,
-  },
-  {
-    id: 'midnight_shadow',
-    name: 'Midnight Shadow',
-    color: '#212121',
-    price: 1000,
-    unlocked: false,
-  },
-  {
-    id: 'neon_pink',
-    name: 'Neon Pink',
-    color: '#E91E63',
-    price: 750,
-    unlocked: false,
-  },
-  {
-    id: 'cyber_cyan',
-    name: 'Cyber Cyan',
-    color: '#00BCD4',
-    price: 750,
-    unlocked: false,
-  },
+  { id: 'default', name: 'Classic Red', color: '#FF4444', price: 0, unlocked: true },
+  { id: 'blue', name: 'Ocean Blue', color: '#4444FF', price: 0, unlocked: false, isAdUnlock: true },
+  { id: 'green', name: 'Forest Green', color: '#44FF44', price: 0, unlocked: false, isAdUnlock: true },
+  { id: 'yellow', name: 'Sunshine Yellow', color: '#FFFF44', price: 100, unlocked: false },
+  { id: 'purple', name: 'Royal Purple', color: '#AA44FF', price: 150, unlocked: false },
+  { id: 'orange', name: 'Sunset Orange', color: '#FF8844', price: 200, unlocked: false },
+  { id: 'pink', name: 'Bubblegum Pink', color: '#FF44AA', price: 250, unlocked: false },
+  { id: 'cyan', name: 'Electric Cyan', color: '#44FFFF', price: 300, unlocked: false },
 ];
 
+// World skins
 export const WORLD_SKINS: WorldSkin[] = [
   {
     id: 'default',
     name: 'Classic Road',
-    roadColor: '#424242',
+    roadColor: '#555555',
     roadLineColor: '#FFFFFF',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#88CC88',
     price: 0,
     unlocked: true,
   },
   {
     id: 'desert',
     name: 'Desert Highway',
-    roadColor: '#8D6E63',
-    roadLineColor: '#FFF9C4',
-    backgroundColor: '#FFECB3',
-    price: 800,
+    roadColor: '#8B7355',
+    roadLineColor: '#FFE4B5',
+    backgroundColor: '#F4A460',
+    price: 200,
     unlocked: false,
   },
   {
     id: 'night',
     name: 'Night City',
-    roadColor: '#263238',
-    roadLineColor: '#FFD54F',
-    backgroundColor: '#37474F',
-    price: 800,
+    roadColor: '#2C2C2C',
+    roadLineColor: '#FFD700',
+    backgroundColor: '#1A1A2E',
+    price: 300,
     unlocked: false,
   },
   {
     id: 'snow',
-    name: 'Snowy Road',
-    roadColor: '#90A4AE',
-    roadLineColor: '#FFFFFF',
-    backgroundColor: '#ECEFF1',
-    price: 1000,
-    unlocked: false,
-  },
-  {
-    id: 'neon',
-    name: 'Neon Streets',
-    roadColor: '#1A237E',
-    roadLineColor: '#00E5FF',
-    backgroundColor: '#311B92',
-    price: 1200,
-    unlocked: false,
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset Boulevard',
-    roadColor: '#5D4037',
-    roadLineColor: '#FFE082',
-    backgroundColor: '#FF6F00',
-    price: 1000,
+    name: 'Winter Road',
+    roadColor: '#E0E0E0',
+    roadLineColor: '#4169E1',
+    backgroundColor: '#B0E0E6',
+    price: 400,
     unlocked: false,
   },
 ];
 
+// Coin packages
 export const COIN_PACKAGES: CoinPackage[] = [
-  {
-    id: 'small',
-    name: 'Small Bag',
-    coins: 100,
-    price: 19.99,
-    priceRands: 'R 19.99',
-  },
-  {
-    id: 'medium',
-    name: 'Medium Bag',
-    coins: 300,
-    price: 49.99,
-    priceRands: 'R 49.99',
-  },
-  {
-    id: 'large',
-    name: 'Large Bag',
-    coins: 700,
-    price: 99.99,
-    priceRands: 'R 99.99',
-  },
-  {
-    id: 'mega',
-    name: 'Mega Bag',
-    coins: 1500,
-    price: 199.99,
-    priceRands: 'R 199.99',
-  },
-  {
-    id: 'ultimate',
-    name: 'Ultimate Bag',
-    coins: 5000,
-    price: 499.99,
-    priceRands: 'R 499.99',
-  },
+  { id: 'small', name: 'Small Bag', coins: 100, price: 0.99, priceRands: 'R 15' },
+  { id: 'medium', name: 'Medium Bag', coins: 300, price: 2.49, priceRands: 'R 40' },
+  { id: 'large', name: 'Large Bag', coins: 700, price: 4.99, priceRands: 'R 80' },
+  { id: 'mega', name: 'Mega Bag', coins: 1500, price: 9.99, priceRands: 'R 160' },
+  { id: 'ultimate', name: 'Ultimate Bag', coins: 5000, price: 24.99, priceRands: 'R 400' },
 ];

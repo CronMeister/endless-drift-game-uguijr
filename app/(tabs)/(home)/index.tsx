@@ -21,6 +21,9 @@ import {
   loadInventory,
   loadLeaderboard,
   addScoreToLeaderboard,
+  calculateSpeedMultiplier,
+  calculateObstacleInterval,
+  calculateCurrentSpeed,
 } from '@/utils/gameUtils';
 import { Road } from '@/components/game/Road';
 import { Car } from '@/components/game/Car';
@@ -430,10 +433,14 @@ export default function EndlessDriftGame() {
     }
   };
 
-  // Spawn obstacle with improved spacing logic
+  // Spawn obstacle with improved spacing logic and progressive difficulty
   const spawnObstacle = useCallback(() => {
     const now = Date.now();
-    if (now - lastObstacleSpawnTime.current < GAME_CONFIG.OBSTACLE_SPAWN_INTERVAL) {
+    
+    // Calculate dynamic spawn interval based on distance traveled
+    const dynamicInterval = calculateObstacleInterval(gameState.distance);
+    
+    if (now - lastObstacleSpawnTime.current < dynamicInterval) {
       return;
     }
 
@@ -464,7 +471,9 @@ export default function EndlessDriftGame() {
 
     setObstacles(prev => [...prev, newObstacle]);
     lastObstacleSpawnTime.current = now;
-  }, [obstacles]);
+    
+    console.log(`Obstacle spawned at distance ${Math.floor(gameState.distance)}m, interval: ${Math.floor(dynamicInterval)}ms`);
+  }, [obstacles, gameState.distance]);
 
   // Spawn pickup
   const spawnPickup = useCallback(() => {
@@ -541,10 +550,14 @@ export default function EndlessDriftGame() {
           }
         }
 
-        // Calculate current speed
+        // Calculate progressive speed based on distance traveled
+        const speedMultiplier = calculateSpeedMultiplier(prev.distance);
+        const baseSpeed = GAME_CONFIG.BASE_SPEED * speedMultiplier;
+        
+        // Apply speed boost if active
         const currentSpeed = newSpeedBoostActive
-          ? prev.speed * GAME_CONFIG.SPEED_BOOST_MULTIPLIER
-          : prev.speed;
+          ? baseSpeed * GAME_CONFIG.SPEED_BOOST_MULTIPLIER
+          : baseSpeed;
 
         // Update distance and score
         const newDistance = prev.distance + currentSpeed;
@@ -565,15 +578,17 @@ export default function EndlessDriftGame() {
           return { ...prev, isGameOver: true, fuel: 0, distance: newDistance, crashCount: prev.crashCount + 1 };
         }
 
-        // Gradually increase speed
-        const newSpeed = Math.min(GAME_CONFIG.MAX_SPEED, prev.speed + GAME_CONFIG.SPEED_INCREMENT);
+        // Log speed progression every 500m
+        if (Math.floor(newDistance) % 500 === 0 && Math.floor(prev.distance) % 500 !== 0) {
+          console.log(`Distance: ${Math.floor(newDistance)}m, Speed multiplier: ${speedMultiplier.toFixed(2)}x, Current speed: ${currentSpeed.toFixed(2)}`);
+        }
 
         return {
           ...prev,
           distance: newDistance,
           score: newScore,
           fuel: newFuel,
-          speed: newSpeed,
+          speed: currentSpeed, // Store the actual current speed
           speedBoostTimer: newSpeedBoostTimer,
           speedBoostActive: newSpeedBoostActive,
         };
