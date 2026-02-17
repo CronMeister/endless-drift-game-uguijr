@@ -1,14 +1,15 @@
+
 {
   "expo": {
     "name": "Endless Drift",
-    "slug": "Endless Drift",
+    "slug": "endless-drift",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/natively-dark.png",
+    "icon": "./assets/images/dc22f172-90b2-459a-97d4-ea0468921bfe.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/natively-dark.png",
+      "image": "./assets/images/dc22f172-90b2-459a-97d4-ea0468921bfe.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -21,14 +22,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/natively-dark.png",
+        "foregroundImage": "./assets/images/dc22f172-90b2-459a-97d4-ea0468921bfe.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.Natively"
     },
     "web": {
-      "favicon": "./assets/images/final_quest_240x240.png",
+      "favicon": "./assets/images/dc22f172-90b2-459a-97d4-ea0468921bfe.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -36,13 +37,12 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "Endless Drift",
+    "scheme": "endless-drift",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {}
     }
-  },
-  "scheme": "Endless Drift"
+  }
 }
