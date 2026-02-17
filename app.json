@@ -36,7 +36,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "natively",
+    "scheme": "Endless Drift",
     "experiments": {
       "typedRoutes": true
     },

@@ -22,7 +22,7 @@ export const GAME_CONFIG = {
   // Obstacle configuration
   OBSTACLE_WIDTH: 60,
   OBSTACLE_HEIGHT: 100,
-  MIN_OBSTACLE_DISTANCE: 300, // Minimum distance between obstacles
+  MIN_OBSTACLE_DISTANCE: 250, // Reduced from 300 to allow closer obstacles
 
   // Pickup configuration
   PICKUP_WIDTH: 40,
@@ -46,9 +46,9 @@ export const GAME_CONFIG = {
   FUEL_PICKUP_AMOUNT: 30,
 
   // Spawn intervals - PROGRESSIVE OBSTACLE FREQUENCY SYSTEM
-  BASE_OBSTACLE_SPAWN_INTERVAL: 2200, // Base spawn interval in ms
-  MIN_OBSTACLE_SPAWN_INTERVAL: 800, // Fastest spawn rate in ms
-  OBSTACLE_FREQUENCY_INCREASE_RATE: 0.0003, // Obstacle frequency increases with distance
+  BASE_OBSTACLE_SPAWN_INTERVAL: 1200, // Reduced from 2200ms to 1200ms for more frequent obstacles
+  MIN_OBSTACLE_SPAWN_INTERVAL: 500, // Reduced from 800ms to 500ms for faster spawn rate at high distances
+  OBSTACLE_FREQUENCY_INCREASE_RATE: 0.0005, // Increased from 0.0003 to 0.0005 for faster frequency ramp-up
   
   PICKUP_SPAWN_INTERVAL: 3000,
   COIN_SPAWN_INTERVAL: 1500,
