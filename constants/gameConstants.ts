@@ -22,7 +22,7 @@ export const GAME_CONFIG = {
   // Obstacle configuration
   OBSTACLE_WIDTH: 60,
   OBSTACLE_HEIGHT: 100,
-  MIN_OBSTACLE_DISTANCE: 250, // Reduced from 300 to allow closer obstacles
+  MIN_OBSTACLE_DISTANCE: 200, // Reduced from 250 to 200 to allow obstacles to spawn closer
 
   // Pickup configuration
   PICKUP_WIDTH: 40,
@@ -36,9 +36,9 @@ export const GAME_CONFIG = {
   SPEED_BOOST_MULTIPLIER: 1.5,
   SPEED_BOOST_DURATION: 3000,
   
-  // Progressive speed scaling
-  SPEED_INCREASE_RATE: 0.0005, // Speed increases by 0.05% per unit distance
-  MAX_SPEED_MULTIPLIER: 3, // Cap at 3x base speed
+  // Progressive speed scaling - INCREASED for more rapid speed progression
+  SPEED_INCREASE_RATE: 0.001, // Doubled from 0.0005 to 0.001 - speed increases by 0.1% per unit distance
+  MAX_SPEED_MULTIPLIER: 4, // Increased from 3 to 4 - cap at 4x base speed for faster gameplay
 
   // Fuel configuration
   INITIAL_FUEL: 100,
@@ -46,9 +46,9 @@ export const GAME_CONFIG = {
   FUEL_PICKUP_AMOUNT: 30,
 
   // Spawn intervals - PROGRESSIVE OBSTACLE FREQUENCY SYSTEM
-  BASE_OBSTACLE_SPAWN_INTERVAL: 1200, // Reduced from 2200ms to 1200ms for more frequent obstacles
-  MIN_OBSTACLE_SPAWN_INTERVAL: 500, // Reduced from 800ms to 500ms for faster spawn rate at high distances
-  OBSTACLE_FREQUENCY_INCREASE_RATE: 0.0005, // Increased from 0.0003 to 0.0005 for faster frequency ramp-up
+  BASE_OBSTACLE_SPAWN_INTERVAL: 1000, // Reduced from 1200ms to 1000ms for more frequent obstacles
+  MIN_OBSTACLE_SPAWN_INTERVAL: 350, // Reduced from 500ms to 350ms for even faster spawn rate at high distances
+  OBSTACLE_FREQUENCY_INCREASE_RATE: 0.0008, // Increased from 0.0005 to 0.0008 for faster frequency ramp-up
   
   PICKUP_SPAWN_INTERVAL: 3000,
   COIN_SPAWN_INTERVAL: 1500,
@@ -58,7 +58,7 @@ export const GAME_CONFIG = {
   PICKUP_SCORE: 50,
   COIN_SCORE: 10,
   COIN_VALUE: 1,
-  COINS_PER_100M: 2, // Coins earned per 100m traveled
+  COINS_PER_100M: 1, // Reduced from 2 to 1 - less coins earned per 100m traveled
 
   // Game loop
   FRAME_INTERVAL: 16, // ~60 FPS
