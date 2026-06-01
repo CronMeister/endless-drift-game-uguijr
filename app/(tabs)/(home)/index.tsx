@@ -714,7 +714,7 @@ export default function EndlessDriftGame() {
         break;
       }
     }
-  }, [gameState.isPlaying, gameState.isGameOver, gameState.hasShield, gameState.distance, playerX, playerLane, obstacles, pickups]);
+  }, [gameState.isPlaying, gameState.isGameOver, gameState.hasShield, gameState.distance, playerX, playerY, playerLane, obstacles, pickups]);
 
   // Save score to leaderboard and calculate distance coins
   useEffect(() => {

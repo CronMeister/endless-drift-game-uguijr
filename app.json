@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Endless Drift",
-    "slug": "Endless Drift",
+    "slug": "endless-drift",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/dc22f172-90b2-459a-97d4-ea0468921bfe.png",
@@ -36,7 +36,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "Endless Drift",
+    "scheme": "endlessdrift",
     "experiments": {
       "typedRoutes": true
     },
